@@ -15,16 +15,15 @@ hierarchical graphs. Every English section is followed by its Russian version.
 4. [Executable Colab example / Исполняемый пример Colab](../../examples/hyperbolic_graph_basics.ipynb)
 5. [Paper map and bibliography / Карта статей и библиография](paper-map.md)
 
-The learning path is being expanded in reviewable increments. The
-[editorial plan and evidence matrix](../../docs/HYPERBOLIC_THEORY_PLAN.md)
-identify missing modules and claims that still require paper-level verification.
-An experimental root notebook is not a curated or verified example.
+The learning path is being expanded in reviewable increments; claims that still
+require paper-level verification are marked in the [paper map](paper-map.md).
+The exploratory notebooks in [`research-notebooks/`](../../research-notebooks/)
+are not curated or verified examples.
 
-Курс расширяется небольшими проверяемыми изменениями. В
-[редакторском плане и матрице доказательств](../../docs/HYPERBOLIC_THEORY_PLAN.md)
-указаны отсутствующие модули и утверждения, для которых ещё нужна проверка по
-текстам статей. Экспериментальный notebook в корне не считается курируемым или
-проверенным примером.
+Курс расширяется небольшими проверяемыми изменениями; утверждения, для которых
+ещё нужна проверка по текстам статей, отмечены в [карте статей](paper-map.md).
+Исследовательские notebooks в `research-notebooks/` не считаются курируемыми или
+проверенными примерами.
 
 ## Outcomes / Результаты обучения
 

@@ -1,0 +1,21 @@
+# OS / editor
+.DS_Store
+.gigacode/
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Files that notebooks download at run time
+/df_red_green_overlay.csv
+research-notebooks/df_red_green_overlay.csv
+research-notebooks/Spectral-Gromov-Wasserstein/

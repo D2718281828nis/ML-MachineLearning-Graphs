@@ -12,8 +12,8 @@ checkout. Consequently, no unchecked equation, page, or slide locator is used.
 среды. PDF статей и файлы лекций отсутствуют в checkout. Поэтому непроверенные
 номера формул, страниц и слайдов не используются.
 
-The working evidence matrix is in
-[`docs/HYPERBOLIC_THEORY_PLAN.md`](../../docs/HYPERBOLIC_THEORY_PLAN.md).
+Notebook-level status and known blockers are in
+[`docs/NOTEBOOK_ANALYSIS.md`](../../docs/NOTEBOOK_ANALYSIS.md).
 
 ## Bibliography / Библиография
 

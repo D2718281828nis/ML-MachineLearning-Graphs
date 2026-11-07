@@ -33,6 +33,7 @@ CLASSIFICATION = {
     "ai_medical_devices_graph_visualizations.ipynb": "Examples / medical devices",
     "graph_learning_basics.ipynb": "Examples / graph basics",
     "hyperbolic_graph_basics.ipynb": "Examples / hyperbolic basics",
+    "graph_connectivity_chains_circles.ipynb": "Examples / graph connectivity vs. local methods",
 }
 
 

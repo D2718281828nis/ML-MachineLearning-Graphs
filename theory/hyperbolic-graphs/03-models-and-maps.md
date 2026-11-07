@@ -336,8 +336,8 @@ geodesic. It is a geodesic only on a diameter.
 | Lorentz/Klein conversion | Missing example | Planned after source-level convention review |
 
 Run [the curated notebook](../../examples/hyperbolic_graph_basics.ipynb) in
-Google Colab. The three root hyperbolic notebooks remain experimental; their
-known blockers are recorded in [`docs/NOTEBOOK_REVIEW.md`](../../docs/NOTEBOOK_REVIEW.md).
+Google Colab. The hyperbolic notebooks in `research-notebooks/` remain experimental;
+their known blockers are recorded in [`docs/NOTEBOOK_ANALYSIS.md`](../../docs/NOTEBOOK_ANALYSIS.md).
 
 ### Check your understanding
 
