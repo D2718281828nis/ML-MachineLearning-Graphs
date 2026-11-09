@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<link rel="stylesheet" href="assets/style.css?v=3">
+<link rel="stylesheet" href="assets/style.css?v=5">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='8' cy='8' r='5' fill='%232f5bd3'/><circle cx='24' cy='12' r='5' fill='%23d33c3c'/><circle cx='14' cy='25' r='5' fill='%233f9a57'/><path d='M8 8L24 12L14 25Z' fill='none' stroke='%23555' stroke-width='2'/></svg>">
 </head>
 <body>
@@ -17,6 +17,8 @@
   <a class="l" href="#graphs"><span class="en">Graphs</span><span class="ru">Графы</span></a>
   <a class="l" href="#mp"><span class="en">Message passing</span><span class="ru">Передача сообщений</span></a>
   <a class="l" href="#gcn">GCN</a>
+  <a class="l" href="#laplacian"><span class="en">Laplacian</span><span class="ru">Лапласиан</span></a>
+  <a class="l" href="#fourier"><span class="en">Graph Fourier</span><span class="ru">Фурье на графе</span></a>
   <a class="l" href="#gat">GAT</a>
   <a class="l" href="#train"><span class="en">Training: GNN vs MLP</span><span class="ru">Обучение: GNN и MLP</span></a>
   <a class="l" href="#noedges"><span class="en">No edges = MLP</span><span class="ru">Без рёбер = MLP</span></a>
@@ -34,7 +36,7 @@
   <h1><span class="en">How graph neural networks work, and how to check that the graph helped</span><span class="ru">Как работают графовые нейронные сети и как проверить, что граф действительно помог</span></h1>
   <p class="lead"><span class="en">Every demo below runs live in your browser: follow a guided tour of message passing, train a GNN and an MLP side by side step by step, remove the edges and see the network collapse to an MLP, measure the edge contribution Δ<sub>G</sub>, and see why a “when” answer can be defended without a graph while a “where” answer cannot.</span><span class="ru">Все демонстрации ниже работают прямо в браузере: пошаговая экскурсия по передаче сообщений, пошаговое обучение GNN и MLP бок о бок, удаление рёбер (и превращение сети в MLP), измерение вклада рёбер Δ<sub>G</sub> и объяснение, почему ответ «когда» можно защищать без графа, а ответ «где» — нельзя.</span></p>
   <div class="chips">
-    <a class="chip" href="#mp"><span class="en">message passing</span><span class="ru">передача сообщений</span></a><a class="chip" href="#gcn">GCN</a><a class="chip" href="#gat">GATv2</a>
+    <a class="chip" href="#mp"><span class="en">message passing</span><span class="ru">передача сообщений</span></a><a class="chip" href="#gcn">GCN</a><a class="chip" href="#gat">GATv2</a><a class="chip" href="#laplacian"><span class="en">Laplacian</span><span class="ru">лапласиан</span></a><a class="chip" href="#fourier"><span class="en">spectral convolution</span><span class="ru">спектральная свёртка</span></a>
     <a class="chip" href="#train"><span class="en">training step by step</span><span class="ru">обучение по шагам</span></a><a class="chip" href="#lab"><span class="en">edge check</span><span class="ru">проверка рёбер</span> Δ<sub>G</sub></a><a class="chip" href="#hyper"><span class="en">Poincaré disk</span><span class="ru">диск Пуанкаре</span></a>
     <a class="chip" href="https://github.com/D2718281828nis/ML-MachineLearning-Graphs"><span class="en">repository</span><span class="ru">репозиторий</span> ↗</a>
   </div>
@@ -144,14 +146,146 @@
     <div class="prose">
       <div class="callout"><span class="en"><b>Read the matrix in the playground.</b> In GCN mode the matrix panel shows $\hat A$. It is computed from the graph alone and stays the same at every layer and for every input. The network can scale messages through $W$, but it can't choose which neighbour to listen to.</span><span class="ru"><b>Посмотрите на матрицу в песочнице.</b> В режиме GCN панель показывает $\hat A$. Она вычисляется только по графу и одинакова на всех слоях и для любых входов. Сеть может масштабировать сообщения через $W$, но не может выбирать, какого соседа слушать.</span></div>
       <p><span class="en">The repository's healthcare lab uses exactly this layer</span><span class="ru">В healthcare-лаборатории репозитория используется именно этот слой</span> (<code>GCNConv</code>, <code>healthcare-gnn-lab/src/healthcare_gnn/models/gnn.py</code>)<span class="en">: two graph layers and a linear head; <code>kind="gat"</code> switches to attention.</span><span class="ru">: два графовых слоя и линейная голова; <code>kind="gat"</code> переключает на внимание.</span></p>
+      <p class="small"><span class="en">Where does $\hat A$ come from? It is a first-order approximation of a spectral filter on the graph Laplacian: see <a href="#laplacian">the Laplacian</a> and <a href="#fourier">graph Fourier</a> sections.</span><span class="ru">Откуда берётся $\hat A$? Это приближение первого порядка спектрального фильтра на лапласиане графа: см. разделы <a href="#laplacian">лапласиан</a> и <a href="#fourier">Фурье на графе</a>.</span></p>
       <p class="small muted">GCN: Kipf &amp; Welling, ICLR 2017.</p>
     </div>
   </div>
 </section>
 
 <!-- 4 ---------------------------------------------------------------- -->
+<section class="s" id="laplacian">
+  <h2><span class="num">4</span><span class="en">The graph Laplacian: how much a signal changes across edges</span><span class="ru">Лапласиан графа: насколько сигнал меняется вдоль рёбер</span></h2>
+  <p class="sub"><span class="en">Put one number $x_i$ on every node; this vector $x$ is a <b>graph signal</b>. The Laplacian is the matrix that measures how different each node is from its neighbours. Everything spectral (Fourier, spectral convolution, and in the end GCN) is built on it.</span><span class="ru">Запишем в каждую вершину число $x_i$; вектор $x$ — это <b>сигнал на графе</b>. Лапласиан — матрица, которая измеряет, насколько каждая вершина отличается от соседей. На нём построено всё спектральное: Фурье, спектральная свёртка и в итоге GCN.</span></p>
+  <div class="grid2 even">
+    <div class="prose">
+      <div class="eq">$$L=D-A,\qquad D=\operatorname{diag}(d_1,\dots,d_n),\quad d_i=\textstyle\sum_j A_{ij}$$</div>
+      <div class="eq">$$(Lx)_i=d_ix_i-\sum_{j\in\mathcal N(i)}x_j=\sum_{j\in\mathcal N(i)}\big(x_i-x_j\big)$$</div>
+      <div class="eq">$$x^{\top}Lx=\sum_{(i,j)\in E}\big(x_i-x_j\big)^2\ \ge 0$$</div>
+      <div class="eq">$$L_{\text{sym}}=I-D^{-1/2}AD^{-1/2},\qquad \lambda(L_{\text{sym}})\in[0,2]$$</div>
+      <ol class="steps">
+        <li class="en"><b>Row $i$ of $Lx$</b> is “node minus its neighbours”: the discrete analogue of the second derivative $-f''$. On a path graph it is exactly $-(x_{i+1}-2x_i+x_{i-1})$.</li>
+        <li class="ru"><b>Строка $i$ вектора $Lx$</b> — «вершина минус её соседи»: дискретный аналог второй производной $-f''$. На графе-пути это ровно $-(x_{i+1}-2x_i+x_{i-1})$.</li>
+        <li class="en"><b>$x^{\top}Lx$ is the total variation</b> (Dirichlet energy) of the signal: small if neighbours have similar values, large if values jump across edges. The red edges in the demo are its terms.</li>
+        <li class="ru"><b>$x^{\top}Lx$ — полная вариация</b> (энергия Дирихле) сигнала: мала, если у соседей близкие значения, и велика, если значения скачут вдоль рёбер. Красные рёбра в демонстрации — её слагаемые.</li>
+        <li class="en"><b>$L$ is symmetric and positive semi-definite</b>, so it has real eigenvalues $0=\lambda_1\le\lambda_2\le\dots\le\lambda_n$ and orthonormal eigenvectors. $L\mathbf 1=0$: a constant signal has zero variation.</li>
+        <li class="ru"><b>$L$ симметрична и неотрицательно определена</b>, поэтому её собственные значения вещественны, $0=\lambda_1\le\lambda_2\le\dots\le\lambda_n$, а собственные векторы ортонормированы. $L\mathbf 1=0$: у постоянного сигнала вариация нулевая.</li>
+        <li class="en"><b>Number of zero eigenvalues = number of connected components.</b> $\lambda_2$ (the Fiedler value) measures how well the graph is connected, and the signs of its eigenvector $u_2$ split the graph into two parts (spectral clustering).</li>
+        <li class="ru"><b>Число нулевых собственных значений = числу компонент связности.</b> $\lambda_2$ (число Фидлера) показывает, насколько хорошо граф связан, а знаки его собственного вектора $u_2$ делят граф на две части (спектральная кластеризация).</li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="controls">
+        <label><span class="en">graph</span><span class="ru">граф</span> <select id="lapGraph"><option value="comm">two communities / два сообщества</option><option value="cycle">cycle / цикл</option><option value="path">path / путь</option><option value="grid">grid 3×4 / решётка 3×4</option></select></label>
+        <button id="lapEdit"><span class="en">Edit edges</span><span class="ru">Править рёбра</span></button>
+      </div>
+      <div class="controls">
+        <span class="small muted"><span class="en">signal</span><span class="ru">сигнал</span>:</span>
+        <div class="seg" id="lapPreset"><button data-p="fiedler"><span class="en">smooth (u₂)</span><span class="ru">гладкий (u₂)</span></button><button data-p="random"><span class="en">random</span><span class="ru">случайный</span></button><button data-p="alt"><span class="en">rough (uₙ)</span><span class="ru">резкий (uₙ)</span></button><button data-p="const"><span class="en">constant</span><span class="ru">постоянный</span></button></div>
+      </div>
+      <svg class="graph" id="lapSvg"></svg>
+      <div class="controls" style="margin-top:8px"><label><span class="en">value of selected node</span><span class="ru">значение выбранной вершины</span> <input type="range" id="lapVal" min="-1" max="1" step="0.05"> <span class="mono" id="lapValV"></span></label></div>
+      <div class="legend"><span><span class="en">node colour = x<sub>i</sub></span><span class="ru">цвет вершины = x<sub>i</sub></span></span><span style="color:var(--red)">━ <span class="en">edge thickness = (x<sub>i</sub> − x<sub>j</sub>)²</span><span class="ru">толщина ребра = (x<sub>i</sub> − x<sub>j</sub>)²</span></span></div>
+      <div class="stat-row" id="lapStats"></div>
+      <h4 style="margin:10px 0 4px"><span class="en">Eigenvalues of</span><span class="ru">Собственные значения</span> L <span class="small muted">(<span style="color:var(--red)">●</span> λ = 0)</span></h4>
+      <canvas class="plot" id="lapSpec" style="aspect-ratio:420/120"></canvas>
+    </div>
+  </div>
+  <div class="grid2 even" style="margin-top:14px">
+    <div class="card tight">
+      <div class="controls"><div class="seg" id="lapMat"><button data-m="A">A</button><button data-m="D">D</button><button class="on" data-m="L">L</button><button data-m="Lsym">L<sub>sym</sub></button></div> <span class="small muted" id="lapMatTitle"></span></div>
+      <div class="matrix" id="lapMatrix"></div>
+    </div>
+    <div class="callout">
+      <span class="en"><b>What to try.</b> (1) “smooth (u₂)” on two communities: one community is positive, the other negative, and only the bridge 0–6 is red. That is spectral clustering. (2) “constant”: $x^{\top}Lx=0$. (3) “rough (uₙ)”: almost every edge is red. (4) <b>Edit edges</b> and delete the bridge 0–6: a second red dot appears at λ = 0, because the graph now has two components. (5) Switch the matrix to A, D, L and check that every row of L sums to 0.<br><br><b>Link to GNNs.</b> One step of Laplacian smoothing, $x\leftarrow x-\varepsilon Lx$, moves each node towards the average of its neighbours; this is message passing. GCN's $\hat A$ is exactly $I-\tilde L_{\text{sym}}$ for the graph with self-loops (next section).</span>
+      <span class="ru"><b>Что попробовать.</b> (1) «гладкий (u₂)» на двух сообществах: одно сообщество положительное, другое отрицательное, красный только мост 0–6. Это спектральная кластеризация. (2) «постоянный»: $x^{\top}Lx=0$. (3) «резкий (uₙ)»: красные почти все рёбра. (4) <b>Править рёбра</b> и удалить мост 0–6: при λ = 0 появляется вторая красная точка — у графа стало две компоненты. (5) Переключите матрицу на A, D, L и убедитесь, что сумма каждой строки L равна 0.<br><br><b>Связь с GNN.</b> Один шаг лапласова сглаживания $x\leftarrow x-\varepsilon Lx$ сдвигает каждую вершину к среднему её соседей — это и есть передача сообщений. Матрица $\hat A$ в GCN — это ровно $I-\tilde L_{\text{sym}}$ для графа с петлями (следующий раздел).</span>
+    </div>
+  </div>
+</section>
+
+<!-- 5 ---------------------------------------------------------------- -->
+<section class="s" id="fourier">
+  <h2><span class="num">5</span><span class="en">Graph Fourier transform and spectral convolution</span><span class="ru">Преобразование Фурье на графе и спектральная свёртка</span></h2>
+  <p class="sub"><span class="en">On a line, sines and cosines are the eigenfunctions of the second derivative, and their frequencies say how fast they oscillate. On a graph, the eigenvectors of the Laplacian play the same role, and the eigenvalue $\lambda_k$ is the frequency. This gives a Fourier transform on any graph, and convolution as multiplication in the spectrum. GCN is a cheap approximation of exactly that.</span><span class="ru">На прямой синусы и косинусы — собственные функции второй производной, а их частота показывает, как быстро они колеблются. На графе ту же роль играют собственные векторы лапласиана, а собственное значение $\lambda_k$ — это частота. Так получается преобразование Фурье на любом графе, а свёртка — умножение в спектре. GCN — дешёвое приближение именно этого.</span></p>
+
+  <h3><span class="en">1 · Fourier basis = eigenvectors of the Laplacian</span><span class="ru">1 · Базис Фурье = собственные векторы лапласиана</span></h3>
+  <div class="grid2 even">
+    <div class="prose">
+      <div class="eq">$$L=U\Lambda U^{\top},\quad U=[u_1,\dots,u_n],\quad \Lambda=\operatorname{diag}(\lambda_1,\dots,\lambda_n),\qquad u_k^{\top}Lu_k=\lambda_k$$</div>
+      <div class="eq">$$\hat x=U^{\top}x\ \ (\text{GFT}),\qquad x=U\hat x=\sum_k\hat x_k\,u_k\ \ (\text{inverse})$$</div>
+      <ul class="en">
+        <li>$\hat x_k=\langle u_k,x\rangle$ is how much of “frequency” $\lambda_k$ the signal contains.</li>
+        <li>Small $\lambda_k$: $u_k$ changes slowly across edges (few sign changes). Large $\lambda_k$: it flips sign across most edges.</li>
+        <li>On the <b>cycle</b> graph the eigenvectors are exactly sampled sines and cosines and $\lambda_k=2-2\cos(2\pi k/n)$: the classical discrete Fourier transform is a special case.</li>
+        <li>In this section we use $\tilde L=I-\tilde D^{-1/2}(A+I)\tilde D^{-1/2}$, the normalised Laplacian of the graph with self-loops, because then GCN's $\hat A$ is exactly $I-\tilde L$.</li>
+      </ul>
+      <ul class="ru">
+        <li>$\hat x_k=\langle u_k,x\rangle$ — сколько в сигнале «частоты» $\lambda_k$.</li>
+        <li>Малое $\lambda_k$: $u_k$ медленно меняется вдоль рёбер (мало смен знака). Большое $\lambda_k$: знак меняется почти на каждом ребре.</li>
+        <li>На графе-<b>цикле</b> собственные векторы — ровно дискретные синусы и косинусы, а $\lambda_k=2-2\cos(2\pi k/n)$: классическое дискретное преобразование Фурье — частный случай.</li>
+        <li>В этом разделе используется $\tilde L=I-\tilde D^{-1/2}(A+I)\tilde D^{-1/2}$ — нормированный лапласиан графа с петлями, потому что тогда матрица $\hat A$ из GCN равна ровно $I-\tilde L$.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="controls">
+        <label><span class="en">graph</span><span class="ru">граф</span> <select id="fGraph"><option value="cycle">cycle / цикл</option><option value="path">path / путь</option><option value="comm">two communities / два сообщества</option><option value="grid">grid 3×4 / решётка 3×4</option></select></label>
+        <label><span class="en">eigenvector</span><span class="ru">собств. вектор</span> k <input type="range" id="fK" min="0" max="11" value="1"> <b id="fKv">1</b></label>
+      </div>
+      <svg class="graph" id="fEigSvg"></svg>
+      <p class="small" id="fEigInfo" style="margin:6px 0"></p>
+      <canvas class="plot" id="fEigLine" style="aspect-ratio:420/110"></canvas>
+      <canvas class="plot" id="fEigSpec" style="aspect-ratio:420/70;margin-top:6px"></canvas>
+      <div class="legend"><span><span style="color:var(--amber)">●</span> <span class="en">sign change on an edge</span><span class="ru">смена знака на ребре</span></span><span><span class="en">bottom: all eigenvalues, the current one highlighted</span><span class="ru">внизу: все собственные значения, текущее выделено</span></span></div>
+    </div>
+  </div>
+
+  <h3><span class="en">2 · Spectral convolution = filtering frequencies</span><span class="ru">2 · Спектральная свёртка = фильтрация частот</span></h3>
+  <div class="grid2 even">
+    <div class="prose">
+      <div class="eq">$$x *_G g\;=\;U\big((U^{\top}g)\odot(U^{\top}x)\big)\;=\;U\,g_\theta(\Lambda)\,U^{\top}x$$</div>
+      <p class="en">As in signal processing, convolution becomes multiplication in the frequency domain: transform, multiply each frequency by $g(\lambda_k)$, transform back. A <b>low-pass</b> filter keeps the smooth part of the signal and removes noise that jumps across edges.</p>
+      <p class="ru">Как в цифровой обработке сигналов, свёртка превращается в умножение в частотной области: преобразовать, умножить каждую частоту на $g(\lambda_k)$, преобразовать обратно. <b>Фильтр низких частот</b> сохраняет гладкую часть сигнала и убирает шум, который скачет вдоль рёбер.</p>
+      <h4><span class="en">From spectral filters to GCN in three steps</span><span class="ru">От спектральных фильтров к GCN за три шага</span></h4>
+      <ol class="steps">
+        <li class="en"><b>Spectral CNN</b> (Bruna et al., 2014): learn $g_\theta=\operatorname{diag}(\theta_1,\dots,\theta_n)$ directly. Needs the eigendecomposition ($O(n^3)$), $n$ parameters per filter, filters are not localised and don't transfer to another graph.</li>
+        <li class="ru"><b>Spectral CNN</b> (Bruna и др., 2014): обучать $g_\theta=\operatorname{diag}(\theta_1,\dots,\theta_n)$ напрямую. Нужно разложение по собственным векторам ($O(n^3)$), $n$ параметров на фильтр, фильтры не локальны и не переносятся на другой граф.</li>
+        <li class="en"><b>ChebNet</b> (Defferrard et al., 2016): make $g$ a polynomial of degree $K$. A polynomial of $\Lambda$ inside $U\cdot U^{\top}$ is the same polynomial of $L$, so no eigenvectors are needed, and $L^K$ only reaches $K$ hops: the filter is <b>$K$-hop localised</b>.
+          <div class="eq">$$U\Big(\sum_{k=0}^{K}\theta_kT_k(\bar\Lambda)\Big)U^{\top}x=\sum_{k=0}^{K}\theta_kT_k(\bar L)\,x,\qquad \bar L=\tfrac{2}{\lambda_{\max}}L-I$$</div></li>
+        <li class="ru"><b>ChebNet</b> (Defferrard и др., 2016): сделать $g$ многочленом степени $K$. Многочлен от $\Lambda$ внутри $U\cdot U^{\top}$ — это тот же многочлен от $L$, поэтому собственные векторы не нужны, а $L^K$ дотягивается только на $K$ шагов: фильтр <b>локален в $K$-окрестности</b>.
+          <div class="eq">$$U\Big(\sum_{k=0}^{K}\theta_kT_k(\bar\Lambda)\Big)U^{\top}x=\sum_{k=0}^{K}\theta_kT_k(\bar L)\,x,\qquad \bar L=\tfrac{2}{\lambda_{\max}}L-I$$</div></li>
+        <li class="en"><b>GCN</b> (Kipf &amp; Welling, 2017): take $K=1$, $\lambda_{\max}\approx2$ and a single parameter $\theta=\theta_0=-\theta_1$, then apply the renormalisation trick (add self-loops):
+          <div class="eq">$$\theta_0x+\theta_1(L_{\text{sym}}-I)x=\theta\big(I+D^{-1/2}AD^{-1/2}\big)x\ \longrightarrow\ \theta\,\tilde D^{-1/2}\tilde A\tilde D^{-1/2}x=\theta\,\hat Ax$$</div>
+          Since $\hat A=I-\tilde L$, one GCN layer is the spectral filter $g(\lambda)=1-\lambda$, a <b>low-pass</b> filter. $K$ layers give $(1-\lambda)^K$: more layers, stronger smoothing, and eventually over-smoothing.</li>
+        <li class="ru"><b>GCN</b> (Kipf, Welling, 2017): взять $K=1$, $\lambda_{\max}\approx2$ и один параметр $\theta=\theta_0=-\theta_1$, затем применить трюк перенормировки (добавить петли):
+          <div class="eq">$$\theta_0x+\theta_1(L_{\text{sym}}-I)x=\theta\big(I+D^{-1/2}AD^{-1/2}\big)x\ \longrightarrow\ \theta\,\tilde D^{-1/2}\tilde A\tilde D^{-1/2}x=\theta\,\hat Ax$$</div>
+          Поскольку $\hat A=I-\tilde L$, один слой GCN — это спектральный фильтр $g(\lambda)=1-\lambda$, <b>фильтр низких частот</b>. $K$ слоёв дают $(1-\lambda)^K$: чем больше слоёв, тем сильнее сглаживание, а в пределе — пересглаживание.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="controls">
+        <div class="seg" id="fFilter"><button class="on" data-f="gcn">GCN (1−λ)<sup>K</sup></button><button data-f="low"><span class="en">ideal low-pass</span><span class="ru">идеальный НЧ</span></button><button data-f="heat"><span class="en">heat</span><span class="ru">тепловой</span> e<sup>−τλ</sup></button><button data-f="high"><span class="en">high-pass</span><span class="ru">ВЧ</span></button></div>
+      </div>
+      <div class="controls">
+        <label><span class="en">parameter</span><span class="ru">параметр</span> <input type="range" id="fP" min="1" max="12" step="1" value="2"> <b id="fPv"></b></label>
+        <button id="fNoise"><span class="en">New noise</span><span class="ru">Новый шум</span></button>
+      </div>
+      <div class="grid2 even" style="gap:8px">
+        <div><svg class="graph" id="fIn"></svg><p class="small muted" style="text-align:center;margin:2px 0"><span class="en">input x = smooth + noise</span><span class="ru">вход x = гладкий + шум</span></p></div>
+        <div><svg class="graph" id="fOut"></svg><p class="small muted" style="text-align:center;margin:2px 0"><span class="en">output y = U g(Λ) Uᵀ x</span><span class="ru">выход y = U g(Λ) Uᵀ x</span></p></div>
+      </div>
+      <canvas class="plot" id="fSpec" style="aspect-ratio:420/150;margin-top:8px"></canvas>
+      <div class="legend"><span><i style="background:var(--muted)"></i>|x̂<sub>k</sub>| <span class="en">input spectrum</span><span class="ru">спектр входа</span></span><span><i style="background:var(--accent)"></i>|ŷ<sub>k</sub>| = |g(λ<sub>k</sub>) x̂<sub>k</sub>|</span><span style="color:var(--amber)">━ g(λ)</span></div>
+      <p class="small" id="fOutInfo"></p>
+    </div>
+  </div>
+  <div class="callout warn" style="margin-top:14px">
+    <span class="en"><b>Why this matters for the edge check.</b> A GCN is a low-pass filter <i>on the given graph</i>. It helps exactly when the useful signal is low-frequency on that graph, i.e. when neighbours tend to share the label (homophily). If the label signal is high-frequency (heterophily), or the edges are unrelated to it (random or wrong edges), low-pass filtering removes signal instead of noise, and Δ<sub>G</sub> ≈ 0 or below zero, as in the <a href="#lab">lab</a>. The spectrum of the graph is a hypothesis too.</span>
+    <span class="ru"><b>Почему это важно для проверки рёбер.</b> GCN — фильтр низких частот <i>на данном графе</i>. Он помогает ровно тогда, когда полезный сигнал на этом графе низкочастотный, то есть соседи обычно имеют одну метку (гомофилия). Если сигнал метки высокочастотный (гетерофилия) или рёбра с ним не связаны (случайные или неверные рёбра), фильтр низких частот убирает сигнал, а не шум, и Δ<sub>G</sub> ≈ 0 или меньше нуля, как в <a href="#lab">лаборатории</a>. Спектр графа — тоже гипотеза.</span>
+  </div>
+</section>
+
+<!-- 6 ---------------------------------------------------------------- -->
 <section class="s" id="gat">
-  <h2><span class="num">4</span><span class="en">GAT / GATv2: the network learns whom to listen to</span><span class="ru">GAT / GATv2: сеть учится, кого слушать</span></h2>
+  <h2><span class="num">6</span><span class="en">GAT / GATv2: the network learns whom to listen to</span><span class="ru">GAT / GATv2: сеть учится, кого слушать</span></h2>
   <div class="grid2 even">
     <div class="prose">
       <div class="eq">$$e_{ij}=a^{\top}\,\mathrm{LeakyReLU}\big(W[h_i\,\|\,h_j]\big),\qquad \alpha_{ij}=\frac{\exp e_{ij}}{\sum_{k\in\mathcal N(i)\cup\{i\}}\exp e_{ik}},\qquad h_i'=\sigma\Big(\sum_{j}\alpha_{ij}\,W h_j\Big).$$</div>
@@ -180,7 +314,7 @@
 
 <!-- 5 ---------------------------------------------------------------- -->
 <section class="s" id="train">
-  <h2><span class="num">5</span><span class="en">GNN vs MLP: training step by step</span><span class="ru">GNN и MLP: обучение шаг за шагом</span></h2>
+  <h2><span class="num">7</span><span class="en">GNN vs MLP: training step by step</span><span class="ru">GNN и MLP: обучение шаг за шагом</span></h2>
   <p class="sub"><span class="en">Both networks have the same layers (input 2 → hidden 4 → output 1), the same initial weights and the same 6 labelled nodes. The only difference: the GNN mixes each node's vector with its neighbours (Â) before each weight layer. Press <b>Next step</b> to walk through one training iteration: forward pass, loss, backpropagation, weight update.</span><span class="ru">У обеих сетей одинаковые слои (вход 2 → скрытый 4 → выход 1), одинаковые начальные веса и одни и те же 6 размеченных вершин. Единственное отличие: GNN перед каждым слоем весов смешивает вектор вершины с соседями (Â). Нажимайте <b>Следующий шаг</b>, чтобы пройти одну итерацию обучения: прямой проход, потери, обратное распространение, обновление весов.</span></p>
   <div class="controls">
     <button class="primary" id="trNext"><span class="en">Next step ▸</span><span class="ru">Следующий шаг ▸</span></button>
@@ -224,7 +358,7 @@
 
 <!-- 6 ---------------------------------------------------------------- -->
 <section class="s" id="noedges">
-  <h2><span class="num">6</span><span class="en">What network is left when the edges are removed</span><span class="ru">Какая сеть остаётся, если удалить рёбра</span></h2>
+  <h2><span class="num">8</span><span class="en">What network is left when the edges are removed</span><span class="ru">Какая сеть остаётся, если удалить рёбра</span></h2>
   <p class="sub"><span class="en">It is the same GCN or GATv2 with one change: the graph builder returns ∅. Every layer then becomes an ordinary fully connected layer applied to each node separately.</span><span class="ru">Это та же GCN или GATv2 с одним изменением: построитель графа возвращает ∅. Тогда каждый слой становится обычным полносвязным слоем, применённым к каждой вершине отдельно.</span></p>
   <div class="grid2 even">
     <div class="card">
@@ -265,7 +399,7 @@
 
 <!-- 7 ---------------------------------------------------------------- -->
 <section class="s" id="lab">
-  <h2><span class="num">7</span><span class="en">Lab: does the graph help? Measure Δ<sub>G</sub> live</span><span class="ru">Лаборатория: помогает ли граф? Измеряем Δ<sub>G</sub></span></h2>
+  <h2><span class="num">9</span><span class="en">Lab: does the graph help? Measure Δ<sub>G</sub> live</span><span class="ru">Лаборатория: помогает ли граф? Измеряем Δ<sub>G</sub></span></h2>
   <p class="sub"><span class="en">The “GNN” here is a simplified graph convolution (SGC): $K$ rounds of $\hat A$ smoothing, then a small MLP head. The control is the identical pipeline with $A=\varnothing$. A third, independent MLP has its own hyper-parameters. Five stratified folds and fixed seeds; everything is trained in your browser.</span><span class="ru">«GNN» здесь — упрощённая графовая свёртка (SGC): $K$ раундов сглаживания $\hat A$, затем небольшая MLP-голова. Контроль — тот же конвейер с $A=\varnothing$. Третья, независимая MLP имеет свои гиперпараметры. Пять стратифицированных фолдов и фиксированные seed; всё обучается в браузере.</span></p>
   <div class="grid2">
     <div class="card">
@@ -307,7 +441,7 @@
 
 <!-- 8 ---------------------------------------------------------------- -->
 <section class="s" id="task">
-  <h2><span class="num">8</span><span class="en">The task: “when” is defended without a graph, “where” needs Δ<sub>G</sub></span><span class="ru">Задача: «когда» защищается без графа, «где» требует Δ<sub>G</sub></span></h2>
+  <h2><span class="num">10</span><span class="en">The task: “when” is defended without a graph, “where” needs Δ<sub>G</sub></span><span class="ru">Задача: «когда» защищается без графа, «где» требует Δ<sub>G</sub></span></h2>
   <p class="sub"><span class="en">The edge check does not compute the moment or the source. It decides which part of the answer may rely on the graph. The demo shows both parts on a simulated sensor network (brain, engine or market; the logic is the same).</span><span class="ru">Проверка рёбер не вычисляет ни момент, ни источник. Она решает, какая часть ответа может опираться на граф. Демонстрация показывает обе части на смоделированной сети датчиков (мозг, двигатель или рынок — логика одна).</span></p>
   <div class="grid2 even">
     <div class="card">
@@ -368,7 +502,7 @@
 
 <!-- 9 ---------------------------------------------------------------- -->
 <section class="s" id="hyper">
-  <h2><span class="num">9</span><span class="en">Hyperbolic graphs: room for trees</span><span class="ru">Гиперболические графы: место для деревьев</span></h2>
+  <h2><span class="num">11</span><span class="en">Hyperbolic graphs: room for trees</span><span class="ru">Гиперболические графы: место для деревьев</span></h2>
   <p class="sub"><span class="en">In a tree with branching $b$ the number of nodes at depth $d$ grows like $b^{d}$, but a Euclidean circle's length grows only linearly in its radius. Hyperbolic space grows exponentially, so trees and hierarchies embed with little distortion.</span><span class="ru">В дереве с ветвлением $b$ число вершин на глубине $d$ растёт как $b^{d}$, а длина евклидовой окружности растёт лишь линейно по радиусу. Гиперболическое пространство растёт экспоненциально, поэтому деревья и иерархии вкладываются в него с малым искажением.</span></p>
   <div class="grid2 even">
     <div class="card">
@@ -425,7 +559,7 @@
 
 <!-- 10 --------------------------------------------------------------- -->
 <section class="s" id="summary">
-  <h2><span class="num">10</span><span class="en">Cheat sheet</span><span class="ru">Шпаргалка</span></h2>
+  <h2><span class="num">12</span><span class="en">Cheat sheet</span><span class="ru">Шпаргалка</span></h2>
   <div class="scroll-x">
   <table class="t">
     <tr><th></th><th>MLP</th><th>GCN</th><th>GATv2</th><th><span class="en">Hyperbolic GCN</span><span class="ru">Гиперболическая GCN</span></th><th>GNN, A = ∅</th></tr>
@@ -446,14 +580,15 @@
 
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-<script src="assets/data.js?v=3"></script>
-<script src="assets/common.js?v=3"></script>
+<script src="assets/data.js?v=5"></script>
+<script src="assets/common.js?v=5"></script>
 <script>U.initTheme(); U.initLang();</script>
-<script src="assets/mp.js?v=3"></script>
-<script src="assets/train.js?v=3"></script>
-<script src="assets/lab.js?v=3"></script>
-<script src="assets/event.js?v=3"></script>
-<script src="assets/hyper.js?v=3"></script>
+<script src="assets/mp.js?v=5"></script>
+<script src="assets/train.js?v=5"></script>
+<script src="assets/lab.js?v=5"></script>
+<script src="assets/event.js?v=5"></script>
+<script src="assets/hyper.js?v=5"></script>
+<script src="assets/spec.js?v=5"></script>
 <script>
   if (window.renderMathInElement) renderMathInElement(document.body, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], throwOnError: false });
   const links = [...document.querySelectorAll('nav.top a.l')];
