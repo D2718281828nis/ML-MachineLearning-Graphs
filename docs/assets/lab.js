@@ -122,12 +122,12 @@
         <table class="t">
           <tr><th>${U.t('model', 'модель')}</th><th>${U.t('what it sees', 'что видит')}</th><th>F1 (${U.t('red', 'красные')}), ${U.t('5 folds', '5 фолдов')}</th></tr>
           <tr><td><b>GNN</b> (K=${st.K})</td><td>Â<sup>K</sup>X → ${U.t('same MLP head', 'та же MLP-голова')}</td><td class="n">${U.fmt(mean(r.g))} ± ${U.fmt(sd(r.g))}</td></tr>
-          <tr><td><b>GNN, A = ∅</b></td><td>X → ${U.t('same head, same seeds, folds', 'та же голова, те же seed и фолды')}</td><td class="n">${U.fmt(mean(r.e))} ± ${U.fmt(sd(r.e))}</td></tr>
+          <tr><td><b>GNN, A = ∅</b></td><td>X → ${U.t('same head, same seeds, folds', 'та же голова, те же фолды и начальные значения генератора')}</td><td class="n">${U.fmt(mean(r.e))} ± ${U.fmt(sd(r.e))}</td></tr>
           <tr><td>MLP</td><td>X, ${U.t('own hyper-parameters', 'свои гиперпараметры')}</td><td class="n">${U.fmt(mean(r.m))} ± ${U.fmt(sd(r.m))}</td></tr>
         </table>
         <p style="margin:10px 0 4px"><b>Δ_G = F1(GNN) − F1(GNN, A=∅) = ${dm >= 0 ? '+' : ''}${U.fmt(dm, 3)}</b> &nbsp;(${U.t('per fold', 'по фолдам')}: ${d.map((v) => (v >= 0 ? '+' : '') + v.toFixed(2)).join(', ')})</p>
         <p style="margin:4px 0">${verdict}</p>
-        <p class="small muted">${U.t('The MLP row differs from the A = ∅ row only because the models differ (width, learning rate, epochs, seeds). That gap says nothing about edges, which is why Δ_G uses the A = ∅ control.', 'Строка MLP отличается от строки A = ∅ только потому, что это разные модели (ширина, скорость обучения, эпохи, seed). Эта разница ничего не говорит о рёбрах, поэтому Δ_G считается относительно контроля A = ∅.')}</p>`;
+        <p class="small muted">${U.t('The MLP row differs from the A = ∅ row only because the models differ (width, learning rate, epochs, seeds). That gap says nothing about edges, which is why Δ_G uses the A = ∅ control.', 'Строка MLP отличается от строки A = ∅ только потому, что это разные модели (ширина, скорость обучения, эпохи, начальные значения генератора). Эта разница ничего не говорит о рёбрах, поэтому Δ_G считается относительно контроля A = ∅.')}</p>`;
       draw();
     }, 30);
   }

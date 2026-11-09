@@ -194,7 +194,8 @@
   U.setLang = function (l) {
     document.documentElement.lang = l;
     try { localStorage.setItem('gnn-lang', l); } catch (e) { /* ignore */ }
-    document.querySelectorAll('#langSeg button').forEach((b) => b.classList.toggle('on', b.dataset.l === l));
+    document.querySelectorAll('button[data-l]').forEach((b) => b.classList.toggle('on', b.dataset.l === l));
+    document.querySelectorAll('[data-en][data-ru]').forEach((e) => { e.textContent = e.dataset[l]; });
     document.title = l === 'ru' ? 'Графовые нейронные сети — интерактивно' : 'Graph Neural Networks, Interactively';
     U.onLang.forEach((f) => f());
   };
@@ -204,7 +205,7 @@
     const q = new URLSearchParams(location.search).get('lang');
     if (q === 'ru' || q === 'en') l = q;
     if (!l) l = (navigator.language || '').toLowerCase().startsWith('ru') ? 'ru' : 'en';
-    document.querySelectorAll('#langSeg button').forEach((b) => b.addEventListener('click', () => U.setLang(b.dataset.l)));
+    document.querySelectorAll('button[data-l]').forEach((b) => b.addEventListener('click', () => U.setLang(b.dataset.l)));
     U.setLang(l);
   };
 

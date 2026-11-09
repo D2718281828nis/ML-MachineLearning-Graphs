@@ -123,7 +123,7 @@
       P.hid.forEach((q, k) => neuron(q, hid[k], k === 0 ? 'h' : ''));
       U.el('circle', { cx: P.out[0][0], cy: P.out[0][1], r: 16, fill: p > 0.5 ? U.css('--red') : U.css('--green'), opacity: 0.25 + 0.75 * Math.abs(p - 0.5) * 2, stroke: ink }, net);
       U.el('text', { x: P.out[0][0], y: P.out[0][1] + 4, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, fill: ink, text: U.fmt(p) }, net);
-      U.el('text', { x: P.out[0][0] + 22, y: P.out[0][1] - 4, 'font-size': 10, fill: muted, text: 'p(red)' }, net);
+      U.el('text', { x: P.out[0][0] + 22, y: P.out[0][1] - 4, 'font-size': 10, fill: muted, text: t('p(red)', 'p(красный)') }, net);
       U.el('text', { x: P.out[0][0] + 22, y: P.out[0][1] + 10, 'font-size': 10, fill: muted, text: `${t('loss', 'потери')} ${U.fmt(f.loss, 3)}` }, net);
       U.el('text', { x: P.out[0][0] + 22, y: P.out[0][1] + 24, 'font-size': 10, fill: muted, text: `${t('test acc', 'точность')} ${U.fmt(f.acc)}` }, net);
     }
