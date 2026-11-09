@@ -23,28 +23,20 @@
       const p = grp[i] === grp[j] ? 0.11 : 0.0025;
       if (R() < p) { adj[i].add(j); adj[j].add(i); m++; }
     }
-    if (random) { // keep the edge count, drop all structure
-      adj.forEach((s) => s.clear());
-      for (let e = 0; e < m; e++) { const a = R.int(n), b = R.int(n); if (a !== b) { adj[a].add(b); adj[b].add(a); } }
+    // layout: one cluster per community, clusters on an ellipse. It does not depend on the edges,
+    // so "random edges" shows the very same nodes in the very same places as "communities".
+    const P = U.rng(2718281); for (let w = 0; w < 10; w++) P();
+    const L = y.map((_, i) => {
+      const g = grp[i], ang = -Math.PI / 2 + 2 * Math.PI * g / 7;
+      const cx = CW / 2 + 0.36 * CW * Math.cos(ang), cy = CH / 2 + 0.36 * CH * Math.sin(ang);
+      return [U.clamp(cx + 26 * P.normal(), 10, CW - 10), U.clamp(cy + 26 * P.normal(), 10, CH - 10)];
+    });
+    if (random) { // same nodes, features and edge count; edges rewired uniformly at random
+      adj.forEach((s2) => s2.clear());
+      let e = 0;
+      while (e < m) { const a2 = R.int(n), b2 = R.int(n); if (a2 !== b2 && !adj[a2].has(b2)) { adj[a2].add(b2); adj[b2].add(a2); e++; } }
     }
-    const A = adj.map((s) => Array.from(s));
-    // force layout on the *true* community structure for a readable picture
-    const L = Array.from({ length: n }, () => [R() * CW, R() * CH]);
-    const Atrue = random ? null : A;
-    for (let it = 0; it < 120; it++) {
-      const F = L.map(() => [0, 0]);
-      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
-        let dx = L[i][0] - L[j][0], dy = L[i][1] - L[j][1]; const d2 = dx * dx + dy * dy + 0.01, f = 600 / d2;
-        F[i][0] += dx * f; F[i][1] += dy * f; F[j][0] -= dx * f; F[j][1] -= dy * f;
-      }
-      const E = Atrue || [];
-      E.forEach((nb, i) => nb.forEach((j) => { if (j > i) { const dx = L[j][0] - L[i][0], dy = L[j][1] - L[i][1]; F[i][0] += dx * 0.02; F[i][1] += dy * 0.02; F[j][0] -= dx * 0.02; F[j][1] -= dy * 0.02; } }));
-      const cool = 1 - it / 130;
-      L.forEach((p, i) => { p[0] += U.clamp(F[i][0] + (CW / 2 - p[0]) * 0.01, -10, 10) * cool; p[1] += U.clamp(F[i][1] + (CH / 2 - p[1]) * 0.01, -10, 10) * cool; p[0] = U.clamp(p[0], 12, CW - 12); p[1] = U.clamp(p[1], 12, CH - 12); });
-    }
-    if (random) { // place randomly-wired graph by the same feature-free layout as structured one would be meaningless: use grid by index
-      L.forEach((p, i) => { const R2 = U.rng(i + 3); p[0] = 20 + R2() * (CW - 40); p[1] = 20 + R2() * (CH - 40); });
-    }
+    const A = adj.map((s2) => Array.from(s2));
     return { pts: L, y, X, adj: A, view: L };
   }
 
@@ -148,7 +140,7 @@
   function draw() {
     const ctx = U.setupCanvas(cv, CW, CH), { view, adj, y: Y } = st.data;
     ctx.clearRect(0, 0, CW, CH);
-    ctx.strokeStyle = U.css('--muted'); ctx.globalAlpha = st.ds === 'rand' ? 0.12 : 0.3; ctx.lineWidth = 0.8;
+    ctx.strokeStyle = U.css('--muted'); ctx.globalAlpha = st.ds === 'rand' ? 0.22 : 0.3; ctx.lineWidth = 0.8;
     ctx.beginPath();
     adj.forEach((nb, i) => nb.forEach((j) => { if (j > i) { ctx.moveTo(view[i][0], view[i][1]); ctx.lineTo(view[j][0], view[j][1]); } }));
     ctx.stroke(); ctx.globalAlpha = 1;
