@@ -57,12 +57,14 @@
     const dist = (r) => Math.max(...r) / Math.min(...r);
     const ell = Math.min(0.9 + Math.log(st.b), 4.2 / st.D), edgeE = 0.96 / st.D;
     document.getElementById('hyStats').innerHTML = `
-      <div class="stat"><div class="v">${T.length}</div><div class="k">nodes, ${leaves.length} leaves = ${st.b}<sup>${st.D}</sup></div></div>
-      <div class="stat"><div class="v">${U.fmt(minE / edgeE)}</div><div class="k">closest leaves, Euclidean (in edge lengths)</div></div>
-      <div class="stat"><div class="v">${U.fmt(minH / ell)}</div><div class="k">closest leaves, hyperbolic (in edge lengths)</div></div>
-      <div class="stat"><div class="v">${U.fmt(dist(rE), 1)} → ${U.fmt(dist(rH), 1)}</div><div class="k">distortion of leaf distances, Euclidean → hyperbolic (1 = perfect)</div></div>`;
-    document.getElementById('hyGrowth').textContent =
-      `Leaves grow as ${st.b}^d. A circle of radius r has length 2πr in the plane but 2π·sinh r in hyperbolic space: at r = ${U.fmt(st.D * ell, 1)} that is ${U.fmt(2 * Math.PI * st.D * ell, 0)} vs ${U.fmt(2 * Math.PI * Math.sinh(st.D * ell), 0)}, enough room for ${leaves.length} leaves.`;
+      <div class="stat"><div class="v">${T.length}</div><div class="k">${U.t('nodes', 'вершин')}, ${leaves.length} ${U.t('leaves', 'листьев')} = ${st.b}<sup>${st.D}</sup></div></div>
+      <div class="stat"><div class="v">${U.fmt(minE / edgeE)}</div><div class="k">${U.t('closest leaves, Euclidean (in edge lengths)', 'ближайшие листья, евклидово (в длинах ребра)')}</div></div>
+      <div class="stat"><div class="v">${U.fmt(minH / ell)}</div><div class="k">${U.t('closest leaves, hyperbolic (in edge lengths)', 'ближайшие листья, гиперболически (в длинах ребра)')}</div></div>
+      <div class="stat"><div class="v">${U.fmt(dist(rE), 1)} → ${U.fmt(dist(rH), 1)}</div><div class="k">${U.t('distortion of leaf distances, Euclidean → hyperbolic (1 = perfect)', 'искажение расстояний между листьями, евклидово → гиперболическое (1 = идеально)')}</div></div>`;
+    const r0 = U.fmt(st.D * ell, 1), e0 = U.fmt(2 * Math.PI * st.D * ell, 0), h0 = U.fmt(2 * Math.PI * Math.sinh(st.D * ell), 0);
+    document.getElementById('hyGrowth').textContent = U.t(
+      `Leaves grow as ${st.b}^d. A circle of radius r has length 2πr in the plane but 2π·sinh r in hyperbolic space: at r = ${r0} that is ${e0} vs ${h0}, enough room for ${leaves.length} leaves.`,
+      `Число листьев растёт как ${st.b}^d. Окружность радиуса r имеет длину 2πr на плоскости, но 2π·sinh r в гиперболическом пространстве: при r = ${r0} это ${e0} против ${h0} — достаточно места для ${leaves.length} листьев.`);
   }
 
   function geodesic(ctx, p, q, X) {
@@ -122,7 +124,7 @@
       st.pos.forEach((z, i) => { const dd = Math.hypot(z[0] - p[0], z[1] - p[1]); if (dd < bd) { bd = dd; best = i; } });
       st.sel = best; drawAll();
       const info = document.getElementById('hySel');
-      if (best !== null) info.textContent = `Selected node at depth ${st.tree[best].d}. Colours show tree (graph) distance from it; both disks use the same colouring, but only the Poincaré disk keeps far branches far apart.`;
+      if (best !== null) info.textContent = U.t(`Selected node at depth ${st.tree[best].d}. Colours show tree (graph) distance from it; both disks use the same colouring, but only the Poincaré disk keeps far branches far apart.`, `Выбрана вершина на глубине ${st.tree[best].d}. Цвет показывает расстояние по дереву (графу) от неё; раскраска на обоих дисках одинакова, но только диск Пуанкаре держит далёкие ветви далеко друг от друга.`);
     }
   });
   document.getElementById('hyB').addEventListener('input', (e) => { st.b = +e.target.value; document.getElementById('hyBv').textContent = st.b; buildTree(); drawAll(); });
@@ -155,10 +157,11 @@
     ctx2.strokeStyle = U.css('--muted'); ctx2.setLineDash([2, 4]); ctx2.beginPath(); ctx2.arc(S / 2, S / 2, sc / Math.sqrt(c), 0, 7); ctx2.stroke(); ctx2.setLineDash([]);
     L.forEach((v) => { ctx2.strokeStyle = U.css('--accent'); ctx2.lineWidth = 2; ctx2.beginPath(); ctx2.moveTo(S / 2, S / 2); ctx2.lineTo(...Y(v)); ctx2.stroke(); ctx2.fillStyle = U.css('--accent'); ctx2.beginPath(); ctx2.arc(...Y(v), 4, 0, 7); ctx2.fill(); });
     ctx2.fillStyle = U.css('--red'); ctx2.beginPath(); ctx2.arc(...Y(m), 6, 0, 7); ctx2.fill();
-    ctx2.fillStyle = U.css('--muted'); ctx2.font = '11px system-ui'; ctx2.fillText('tangent space T₀ (ordinary ℝ²)', 8, 16);
+    ctx2.fillStyle = U.css('--muted'); ctx2.font = '11px system-ui'; ctx2.fillText(U.t('tangent space T₀ (ordinary ℝ²)', 'касательное пространство T₀ (обычное ℝ²)'), 8, 16);
     const hd = (a, b) => { const z = [a[0] * Math.sqrt(c), a[1] * Math.sqrt(c)], w = [b[0] * Math.sqrt(c), b[1] * Math.sqrt(c)]; return hdist(z, w) / Math.sqrt(c); };
     const sumH = (q) => pts.reduce((s, p) => s + hd(p, q) ** 2, 0);
-    document.getElementById('hyTanOut').innerHTML = `Σ d<sub>ℍ</sub>(x<sub>j</sub>, ·)² to the neighbours: tangent aggregate <b>${U.fmt(sumH(agg))}</b>, plain Euclidean average <b>${U.fmt(sumH(eu))}</b>. Lower = more central in the hyperbolic metric. Neither point is the exact hyperbolic centre (Fréchet mean): the layer averages in the tangent space at the origin, which is cheap and differentiable but distorts more the farther the neighbours are from o.`;
+    document.getElementById('hyTanOut').innerHTML = U.t(`Σ d<sub>ℍ</sub>(x<sub>j</sub>, ·)² to the neighbours: tangent aggregate <b>${U.fmt(sumH(agg))}</b>, plain Euclidean average <b>${U.fmt(sumH(eu))}</b>. Lower = more central in the hyperbolic metric. Neither point is the exact hyperbolic centre (Fréchet mean): the layer averages in the tangent space at the origin, which is cheap and differentiable but distorts more the farther the neighbours are from o.`,
+      `Σ d<sub>ℍ</sub>(x<sub>j</sub>, ·)² до соседей: агрегат в касательном пространстве <b>${U.fmt(sumH(agg))}</b>, обычное евклидово среднее <b>${U.fmt(sumH(eu))}</b>. Меньше — значит центральнее в гиперболической метрике. Ни одна из точек не является точным гиперболическим центром (средним Фреше): слой усредняет в касательном пространстве в начале координат — это дёшево и дифференцируемо, но искажение растёт по мере удаления соседей от o.`);
   }
   const toT = (e) => { const r = cT.getBoundingClientRect(), R = r.width / 2 - 8 * r.width / S, maxR = 1 / Math.sqrt(curv.c); return [(e.clientX - r.left - r.width / 2) / R * maxR, (e.clientY - r.top - r.height / 2) / R * maxR]; };
   cT.addEventListener('pointerdown', (e) => { const p = toT(e); let best = null, bd = 0.12 / Math.sqrt(curv.c); pts.forEach((q, i) => { const d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < bd) { bd = d; best = i; } }); dragT = best; if (best !== null) cT.setPointerCapture(e.pointerId); });
@@ -166,5 +169,6 @@
   cT.addEventListener('pointerup', () => { dragT = null; });
 
   U.onTheme.push(() => { if (st.tree) { drawAll(); drawTan(); } });
+  U.onLang.push(() => { if (st.tree) { stats(); drawTan(); document.getElementById('hySel').textContent = ''; } });
   buildTree(); drawAll(); drawTan();
 })();

@@ -4,94 +4,121 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Graph Neural Networks, Interactively</title>
-<meta name="description" content="Interactive explainer: message passing, GCN, GATv2, hyperbolic GNNs, what is left when edges are removed, and how an edge check decides whether a graph-based answer can be trusted.">
+<meta name="description" content="Interactive bilingual (EN/RU) explainer: message passing, GCN, GATv2, hyperbolic GNNs, GNN vs MLP training step by step, the edge check Δ_G, and why “when” needs no graph while “where” does.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=3">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='8' cy='8' r='5' fill='%232f5bd3'/><circle cx='24' cy='12' r='5' fill='%23d33c3c'/><circle cx='14' cy='25' r='5' fill='%233f9a57'/><path d='M8 8L24 12L14 25Z' fill='none' stroke='%23555' stroke-width='2'/></svg>">
 </head>
 <body>
 <nav class="top"><div class="inner">
-  <a class="brand" href="#top">GNN, interactively</a>
-  <a class="l" href="#graphs">Graphs</a>
-  <a class="l" href="#mp">Message passing</a>
+  <a class="brand" href="#top">GNN<span class="en">, interactively</span><span class="ru"> интерактивно</span></a>
+  <a class="l" href="#graphs"><span class="en">Graphs</span><span class="ru">Графы</span></a>
+  <a class="l" href="#mp"><span class="en">Message passing</span><span class="ru">Передача сообщений</span></a>
   <a class="l" href="#gcn">GCN</a>
   <a class="l" href="#gat">GAT</a>
-  <a class="l" href="#noedges">No edges = MLP</a>
-  <a class="l" href="#lab">Lab: Δ<sub>G</sub></a>
-  <a class="l" href="#task">When &amp; where</a>
-  <a class="l" href="#hyper">Hyperbolic</a>
-  <a class="l" href="#summary">Summary</a>
-  <button class="theme" id="themeBtn" title="Toggle light / dark">◐</button>
+  <a class="l" href="#train"><span class="en">Training: GNN vs MLP</span><span class="ru">Обучение: GNN и MLP</span></a>
+  <a class="l" href="#noedges"><span class="en">No edges = MLP</span><span class="ru">Без рёбер = MLP</span></a>
+  <a class="l" href="#lab"><span class="en">Lab</span><span class="ru">Лаборатория</span>: Δ<sub>G</sub></a>
+  <a class="l" href="#task"><span class="en">When &amp; where</span><span class="ru">Когда и где</span></a>
+  <a class="l" href="#hyper"><span class="en">Hyperbolic</span><span class="ru">Гиперболические</span></a>
+  <a class="l" href="#summary"><span class="en">Summary</span><span class="ru">Итог</span></a>
+  <div class="right">
+    <div class="seg" id="langSeg"><button data-l="en">EN</button><button data-l="ru">RU</button></div>
+    <button class="theme" id="themeBtn" title="Light / dark">◐</button>
+  </div>
 </div></nav>
 
 <header class="hero" id="top">
-  <h1>How graph neural networks work, and how to check that the graph helped</h1>
-  <p class="lead">Every demo below runs live in your browser: watch messages flow through a GCN and a GATv2, remove the edges and see the network collapse to an MLP, measure the edge contribution Δ<sub>G</sub>, and see why a “when” answer can be defended without a graph while a “where” answer cannot.</p>
+  <h1><span class="en">How graph neural networks work, and how to check that the graph helped</span><span class="ru">Как работают графовые нейронные сети и как проверить, что граф действительно помог</span></h1>
+  <p class="lead"><span class="en">Every demo below runs live in your browser: follow a guided tour of message passing, train a GNN and an MLP side by side step by step, remove the edges and see the network collapse to an MLP, measure the edge contribution Δ<sub>G</sub>, and see why a “when” answer can be defended without a graph while a “where” answer cannot.</span><span class="ru">Все демонстрации ниже работают прямо в браузере: пошаговая экскурсия по передаче сообщений, пошаговое обучение GNN и MLP бок о бок, удаление рёбер (и превращение сети в MLP), измерение вклада рёбер Δ<sub>G</sub> и объяснение, почему ответ «когда» можно защищать без графа, а ответ «где» — нельзя.</span></p>
   <div class="chips">
-    <a class="chip" href="#mp">message passing</a><a class="chip" href="#gcn">GCN</a><a class="chip" href="#gat">GATv2 attention</a>
-    <a class="chip" href="#noedges">GNN vs MLP</a><a class="chip" href="#lab">edge check Δ<sub>G</sub></a><a class="chip" href="#hyper">Poincaré disk</a>
-    <a class="chip" href="https://github.com/D2718281828nis/ML-MachineLearning-Graphs">repository ↗</a>
+    <a class="chip" href="#mp"><span class="en">message passing</span><span class="ru">передача сообщений</span></a><a class="chip" href="#gcn">GCN</a><a class="chip" href="#gat">GATv2</a>
+    <a class="chip" href="#train"><span class="en">training step by step</span><span class="ru">обучение по шагам</span></a><a class="chip" href="#lab"><span class="en">edge check</span><span class="ru">проверка рёбер</span> Δ<sub>G</sub></a><a class="chip" href="#hyper"><span class="en">Poincaré disk</span><span class="ru">диск Пуанкаре</span></a>
+    <a class="chip" href="https://github.com/D2718281828nis/ML-MachineLearning-Graphs"><span class="en">repository</span><span class="ru">репозиторий</span> ↗</a>
   </div>
 </header>
 
 <!-- 1 ---------------------------------------------------------------- -->
 <section class="s" id="graphs">
-  <h2><span class="num">1</span>A graph is a hypothesis about who influences whom</h2>
-  <p class="sub">A graph neural network gets two inputs: node features and edges. The edges are an assumption. The rest of this page is about how they enter the computation and how to test whether they earned their place.</p>
+  <h2><span class="num">1</span><span class="en">A graph is a hypothesis about who influences whom</span><span class="ru">Граф — это гипотеза о том, кто на кого влияет</span></h2>
+  <p class="sub"><span class="en">A graph neural network gets two inputs: node features and edges. The edges are an assumption. The rest of this page is about how they enter the computation and how to test whether they earned their place.</span><span class="ru">Графовая нейросеть получает на вход две вещи: признаки вершин и рёбра. Рёбра — это предположение. Вся страница о том, как они входят в вычисление и как проверить, заслужили ли они своё место.</span></p>
   <div class="grid2 even">
     <div class="prose">
-      <p>A graph $G=(V,E)$ with $n$ nodes is stored as</p>
+      <p><span class="en">A graph</span><span class="ru">Граф</span> $G=(V,E)$ <span class="en">with</span><span class="ru">с</span> $n$ <span class="en">nodes is stored as</span><span class="ru">вершинами хранится как</span></p>
       <ul>
-        <li>a <b>feature matrix</b> $X\in\mathbb R^{n\times d}$: row $x_i$ describes node $i$ from its own measurements (an EEG channel, an engine sensor, a stock);</li>
-        <li>an <b>adjacency matrix</b> $A\in\{0,1\}^{n\times n}$: $A_{ij}=1$ if $i$ and $j$ are connected.</li>
+        <li><span class="en">a <b>feature matrix</b></span><span class="ru"><b>матрица признаков</b></span> $X\in\mathbb R^{n\times d}$<span class="en">: row $x_i$ describes node $i$ from its own measurements (an EEG channel, an engine sensor, a stock);</span><span class="ru">: строка $x_i$ описывает вершину $i$ по её собственным измерениям (канал ЭЭГ, датчик двигателя, акция);</span></li>
+        <li><span class="en">an <b>adjacency matrix</b></span><span class="ru"><b>матрица смежности</b></span> $A\in\{0,1\}^{n\times n}$: $A_{ij}=1$, <span class="en">if $i$ and $j$ are connected.</span><span class="ru">если $i$ и $j$ соединены.</span></li>
       </ul>
-      <p>An MLP uses only $X$: it treats rows as independent samples. A GNN also uses $A$: each node collects <b>messages</b> from its neighbours, so its prediction can depend on information it does not hold itself.</p>
-      <p>This is useful only if the edges carry information about the target. If they don't, the GNN just has extra inputs it has to learn to ignore. That is the reason for the <a href="#lab">edge check</a> further down.</p>
+      <p class="en">An MLP uses only $X$: it treats rows as independent samples. A GNN also uses $A$: each node collects <b>messages</b> from its neighbours, so its prediction can depend on information it does not hold itself.</p>
+      <p class="ru">MLP использует только $X$: строки для него — независимые объекты. GNN использует ещё и $A$: каждая вершина собирает <b>сообщения</b> от соседей, поэтому её предсказание может зависеть от информации, которой у неё самой нет.</p>
+      <p class="en">This is useful only if the edges carry information about the target. If they don't, the GNN just has extra inputs it has to learn to ignore. That is the reason for the <a href="#lab">edge check</a> further down.</p>
+      <p class="ru">Это полезно, только если рёбра несут информацию о целевой переменной. Если нет — у GNN просто есть лишние входы, которые ей приходится учиться игнорировать. Поэтому ниже и нужна <a href="#lab">проверка рёбер</a>.</p>
     </div>
     <div class="card">
-      <h4>Three ways to read node $i$</h4>
+      <h4><span class="en">Three ways to read node</span><span class="ru">Три способа «прочитать» вершину</span> $i$</h4>
       <table class="t">
-        <tr><th>model</th><th>prediction for node $i$ depends on</th></tr>
-        <tr><td>MLP</td><td>$x_i$ only</td></tr>
-        <tr><td>GNN, $L$ layers</td><td>$x_j$ for every $j$ within $L$ hops of $i$</td></tr>
-        <tr><td>GNN with $A=0$</td><td>$x_i$ only (the same network, no messages)</td></tr>
+        <tr><th><span class="en">model</span><span class="ru">модель</span></th><th><span class="en">prediction for node $i$ depends on</span><span class="ru">предсказание для $i$ зависит от</span></th></tr>
+        <tr><td>MLP</td><td><span class="en">$x_i$ only</span><span class="ru">только $x_i$</span></td></tr>
+        <tr><td>GNN, $L$ <span class="en">layers</span><span class="ru">слоёв</span></td><td><span class="en">$x_j$ for every $j$ within $L$ hops of $i$</span><span class="ru">$x_j$ для всех $j$ не далее $L$ шагов от $i$</span></td></tr>
+        <tr><td>GNN, $A=0$</td><td><span class="en">$x_i$ only (the same network, no messages)</span><span class="ru">только $x_i$ (та же сеть, без сообщений)</span></td></tr>
       </table>
-      <p class="small muted" style="margin-top:10px">The $L$-hop neighbourhood is the <b>receptive field</b>. In the playground below it is drawn as dashed rings around the selected node.</p>
+      <p class="small muted" style="margin-top:10px"><span class="en">The $L$-hop neighbourhood is the <b>receptive field</b>. In the playground below it is drawn as dashed rings around the selected node.</span><span class="ru">Окрестность радиуса $L$ шагов — это <b>рецептивное поле</b>. В песочнице ниже оно показано пунктирными кольцами вокруг выбранной вершины.</span></p>
     </div>
   </div>
 </section>
 
 <!-- 2 ---------------------------------------------------------------- -->
 <section class="s" id="mp">
-  <h2><span class="num">2</span>Message passing, step by step</h2>
-  <p class="sub">Each layer does the same three things for every node at once: <b>(1)</b> every neighbour sends its current vector, <b>(2)</b> the node takes a weighted sum, <b>(3)</b> it applies a weight matrix and a nonlinearity. Only the weights in step 2 differ between GCN and GAT.</p>
-  <div class="eq">$$h_i^{(l+1)}=\sigma\Big(\sum_{j\in\mathcal N(i)\cup\{i\}} c_{ij}\,W^{(l)}h_j^{(l)}\Big),\qquad c_{ij}=\begin{cases}\dfrac{1}{\sqrt{\tilde d_i\tilde d_j}} & \text{GCN (fixed by the graph)}\\[6pt] \alpha_{ij} & \text{GAT (computed from features)}\\[4pt] \mathbb 1[i=j] & \text{edges removed}\end{cases}$$</div>
+  <h2><span class="num">2</span><span class="en">Message passing, step by step</span><span class="ru">Передача сообщений шаг за шагом</span></h2>
+  <p class="sub"><span class="en">One GNN layer = every node, at the same time, does three things. Only the weights in step 2 differ between GCN and GAT.</span><span class="ru">Один слой GNN = каждая вершина одновременно делает три вещи. GCN и GAT отличаются только весами на шаге 2.</span></p>
+  <div class="explain-grid">
+    <div class="card"><div class="big">📨</div><h4><span class="en">1 · Collect</span><span class="ru">1 · Сбор</span></h4><p><span class="en">Each neighbour $j$ sends its current vector $h_j$ along the edge. The node also keeps its own $h_i$ (self-loop).</span><span class="ru">Каждый сосед $j$ отправляет по ребру свой текущий вектор $h_j$. Вершина сохраняет и свой $h_i$ (петля).</span></p></div>
+    <div class="card"><div class="big">⚖️</div><h4><span class="en">2 · Weigh and sum</span><span class="ru">2 · Взвесить и сложить</span></h4><p><span class="en">Multiply each message by a weight $c_{ij}$ and add them up. GCN: $c_{ij}$ depends on degrees only. GAT: $c_{ij}=\alpha_{ij}$ is computed from the features.</span><span class="ru">Каждое сообщение умножается на вес $c_{ij}$, и всё складывается. GCN: $c_{ij}$ зависит только от степеней. GAT: $c_{ij}=\alpha_{ij}$ вычисляется по признакам.</span></p></div>
+    <div class="card"><div class="big">🔁</div><h4><span class="en">3 · Update</span><span class="ru">3 · Обновить</span></h4><p><span class="en">Apply a learned matrix $W$ and a nonlinearity $\sigma$. The result is the node's new vector. Repeat for the next layer: each layer reaches one hop further.</span><span class="ru">Применить обучаемую матрицу $W$ и нелинейность $\sigma$. Результат — новый вектор вершины. Следующий слой повторяет то же: каждый слой «дотягивается» на шаг дальше.</span></p></div>
+  </div>
+  <div class="eq">$$h_i^{(l+1)}=\sigma\Big(\sum_{j\in\mathcal N(i)\cup\{i\}} c_{ij}\,W^{(l)}h_j^{(l)}\Big),\qquad c_{ij}=\begin{cases}\dfrac{1}{\sqrt{\tilde d_i\tilde d_j}} & \text{GCN}\\[6pt] \alpha_{ij} & \text{GAT}\\[4pt] \mathbb 1[i=j] & A=0\end{cases}$$</div>
+
+  <div class="callout warn">
+    <p class="en" style="margin:0"><b>Why nodes A and B?</b> They are a test built into the demo graph. A and B have <b>exactly the same own value (0.30)</b>, but A's neighbours are all positive and B's are all negative. A model that looks only at a node's own value (an MLP, or a GNN with the edges removed) sees “0.30” twice and <b>must</b> give them the same answer. A GNN looks at the neighbours too, so it can tell them apart. Watching what happens to h<sub>A</sub> and h<sub>B</sub> is the quickest way to see what the edges add. The guided tour below walks through it.</p>
+    <p class="ru" style="margin:0"><b>Зачем вершины A и B?</b> Это встроенный в демонстрационный граф тест. У A и B <b>одинаковое собственное значение (0,30)</b>, но все соседи A положительные, а все соседи B отрицательные. Модель, которая смотрит только на собственное значение вершины (MLP или GNN без рёбер), видит дважды «0,30» и <b>обязана</b> дать одинаковый ответ. GNN смотрит ещё и на соседей и поэтому может их различить. Следить за h<sub>A</sub> и h<sub>B</sub> — самый быстрый способ увидеть, что добавляют рёбра. Экскурсия ниже показывает это по шагам.</p>
+  </div>
+
+  <div class="tour">
+    <div class="tstep" id="tourStep"></div>
+    <div class="ttext" id="tourText"></div>
+    <div class="controls" style="margin:0">
+      <button id="tourPrev">← <span class="en">Back</span><span class="ru">Назад</span></button>
+      <button class="primary" id="tourNext"><span class="en">Next</span><span class="ru">Далее</span> →</button>
+      <button id="tourRestart"><span class="en">Restart tour</span><span class="ru">Начать заново</span></button>
+    </div>
+  </div>
+
   <div class="grid2">
     <div class="card">
       <div class="controls">
-        <div class="seg" id="mpMode"><button class="on" data-m="gcn">GCN</button><button data-m="gat">GATv2</button><button data-m="none">Remove edges</button></div>
-        <button class="primary" id="mpRun">▶ Run 3 layers</button>
-        <button id="mpStep">Step one layer</button>
-        <button id="mpReset">Reset</button>
+        <div class="seg" id="mpMode"><button class="on" data-m="gcn">GCN</button><button data-m="gat">GATv2</button><button data-m="none"><span class="en">Remove edges</span><span class="ru">Удалить рёбра</span></button></div>
+        <button class="primary" id="mpRun">▶ <span class="en">Run 3 layers</span><span class="ru">3 слоя</span></button>
+        <button id="mpStep"><span class="en">Step one layer</span><span class="ru">Один слой</span></button>
+        <button id="mpReset"><span class="en">Reset</span><span class="ru">Сброс</span></button>
       </div>
       <svg class="graph" id="mpSvg"></svg>
       <div class="controls" style="margin-top:10px">
-        <label>feature of selected node <input type="range" id="mpFeat" min="-1" max="1" step="0.05"> <span id="mpFeatV" class="mono"></span></label>
-        <button id="mpEdit">Edit edges</button>
-        <button id="mpRestore">Restore graph</button>
+        <label><span class="en">feature of selected node</span><span class="ru">признак выбранной вершины</span> <input type="range" id="mpFeat" min="-1" max="1" step="0.05"> <span id="mpFeatV" class="mono"></span></label>
+        <button id="mpEdit"><span class="en">Edit edges (click two nodes)</span><span class="ru">Править рёбра (клик по двум вершинам)</span></button>
+        <button id="mpRestore"><span class="en">Restore graph</span><span class="ru">Исходный граф</span></button>
       </div>
-      <div class="legend"><span><i style="background:rgb(52,102,214)"></i>negative value</span><span><i style="background:rgb(232,128,32)"></i>positive value</span><span>blue strokes into the selected node: weight $c_{ij}$ of each incoming message</span></div>
-      <p class="small muted">Click a node to select it. Here every node has a single number as its feature, $W=1.5$ and $\sigma=\tanh$, so you can follow the arithmetic by hand. Real layers use vectors and learned matrices.</p>
+      <div class="legend"><span><i style="background:rgb(52,102,214)"></i><span class="en">negative value</span><span class="ru">отрицательное</span></span><span><i style="background:rgb(232,128,32)"></i><span class="en">positive value</span><span class="ru">положительное</span></span><span><span class="en">blue strokes into the selected node: weight $c_{ij}$ of each incoming message</span><span class="ru">синие штрихи к выбранной вершине: вес $c_{ij}$ каждого входящего сообщения</span></span></div>
+      <p class="small muted"><span class="en">Click a node to select it. Each node has a single number as its feature, $W=1.5$ and $\sigma=\tanh$, so you can follow the arithmetic by hand. Real layers use vectors and learned matrices.</span><span class="ru">Кликните по вершине, чтобы выбрать её. У каждой вершины один числовой признак, $W=1{,}5$ и $\sigma=\tanh$, поэтому арифметику можно проверить вручную. В настоящих слоях — векторы и обучаемые матрицы.</span></p>
     </div>
     <div>
-      <div class="card tight"><h4>Computation for the selected node</h4><div class="calc" id="mpCalc"></div></div>
+      <div class="card tight"><h4><span class="en">Computation for the selected node</span><span class="ru">Вычисление для выбранной вершины</span></h4><div class="calc" id="mpCalc"></div></div>
       <div class="card tight" style="margin-top:12px"><h4 id="mpMatrixTitle"></h4><div class="matrix" id="mpMatrix"></div></div>
       <div class="card tight" style="margin-top:12px">
-        <h4>Twins A and B: same own feature, different neighbours</h4>
+        <h4><span class="en">Twins A and B: same own value, different neighbours</span><span class="ru">Близнецы A и B: одно значение, разные соседи</span></h4>
         <table class="t" id="mpTwins"></table>
-        <p class="small muted" style="margin:6px 0 0">With edges, A (positive neighbours) and B (negative neighbours) drift apart. Press <b>Remove edges</b>: they stay identical at every layer, whatever the weights. This is <b>local indistinguishability</b>.</p>
+        <p class="small muted" style="margin:6px 0 0"><span class="en">With edges, A and B drift apart. With <b>Remove edges</b> they stay identical at every layer, whatever the weights: <b>local indistinguishability</b>.</span><span class="ru">С рёбрами A и B расходятся. В режиме <b>Удалить рёбра</b> они одинаковы на каждом слое при любых весах: <b>локальная неразличимость</b>.</span></p>
       </div>
     </div>
   </div>
@@ -99,20 +126,24 @@
 
 <!-- 3 ---------------------------------------------------------------- -->
 <section class="s" id="gcn">
-  <h2><span class="num">3</span>GCN: averaging with fixed, degree-normalised weights</h2>
+  <h2><span class="num">3</span><span class="en">GCN: averaging with fixed, degree-normalised weights</span><span class="ru">GCN: усреднение с фиксированными весами, нормированными по степеням</span></h2>
   <div class="grid2 even">
     <div class="prose">
       <div class="eq">$$H^{(l+1)}=\sigma\big(\hat A\,H^{(l)}W^{(l)}\big),\qquad \hat A=\tilde D^{-1/2}\tilde A\,\tilde D^{-1/2},\quad \tilde A=A+I,\quad \tilde d_i=\textstyle\sum_j\tilde A_{ij}.$$</div>
       <ol class="steps">
-        <li><b>Self-loop</b> $A+I$: the node keeps its own vector in the sum; without it a node would forget itself.</li>
-        <li><b>Symmetric normalisation</b> $1/\sqrt{\tilde d_i\tilde d_j}$: a hub does not blow up, and a message from a hub counts less, because the hub talks to everyone.</li>
-        <li><b>Shared weights</b> $W^{(l)}$: one matrix for all nodes, as in a convolution over pixels.</li>
-        <li><b>$L$ layers = $L$ hops.</b> Two layers mix 2-hop neighbourhoods. Stacking many layers is repeated smoothing ($\hat A^{K}X$) and eventually makes all nodes look alike (over-smoothing).</li>
+        <li class="en"><b>Self-loop</b> $A+I$: the node keeps its own vector in the sum; without it a node would forget itself.</li>
+        <li class="ru"><b>Петля</b> $A+I$: вершина оставляет в сумме собственный вектор; без неё вершина «забыла» бы себя.</li>
+        <li class="en"><b>Symmetric normalisation</b> $1/\sqrt{\tilde d_i\tilde d_j}$: a hub does not blow up, and a message from a hub counts less, because the hub talks to everyone.</li>
+        <li class="ru"><b>Симметричная нормировка</b> $1/\sqrt{\tilde d_i\tilde d_j}$: значения у хаба не «взрываются», а сообщение от хаба весит меньше, потому что хаб связан со всеми.</li>
+        <li class="en"><b>Shared weights</b> $W^{(l)}$: one matrix for all nodes, as in a convolution over pixels.</li>
+        <li class="ru"><b>Общие веса</b> $W^{(l)}$: одна матрица для всех вершин, как свёртка по пикселям.</li>
+        <li class="en"><b>$L$ layers = $L$ hops.</b> Stacking many layers is repeated smoothing ($\hat A^{K}X$) and eventually makes all nodes look alike (over-smoothing).</li>
+        <li class="ru"><b>$L$ слоёв = $L$ шагов.</b> Много слоёв — это многократное сглаживание ($\hat A^{K}X$), которое в итоге делает все вершины похожими (пересглаживание).</li>
       </ol>
     </div>
     <div class="prose">
-      <div class="callout"><b>Read the matrix in the playground.</b> In GCN mode the matrix panel shows $\hat A$. It is computed from the graph alone and stays the same at every layer and for every input. The network can scale messages through $W$, but it can't choose which neighbour to listen to.</div>
-      <p>The repository's healthcare lab uses exactly this layer (<code>GCNConv</code> in <code>healthcare-gnn-lab/src/healthcare_gnn/models/gnn.py</code>): two graph layers and a linear head, with <code>kind="gat"</code> switching to attention.</p>
+      <div class="callout"><span class="en"><b>Read the matrix in the playground.</b> In GCN mode the matrix panel shows $\hat A$. It is computed from the graph alone and stays the same at every layer and for every input. The network can scale messages through $W$, but it can't choose which neighbour to listen to.</span><span class="ru"><b>Посмотрите на матрицу в песочнице.</b> В режиме GCN панель показывает $\hat A$. Она вычисляется только по графу и одинакова на всех слоях и для любых входов. Сеть может масштабировать сообщения через $W$, но не может выбирать, какого соседа слушать.</span></div>
+      <p><span class="en">The repository's healthcare lab uses exactly this layer</span><span class="ru">В healthcare-лаборатории репозитория используется именно этот слой</span> (<code>GCNConv</code>, <code>healthcare-gnn-lab/src/healthcare_gnn/models/gnn.py</code>)<span class="en">: two graph layers and a linear head; <code>kind="gat"</code> switches to attention.</span><span class="ru">: два графовых слоя и линейная голова; <code>kind="gat"</code> переключает на внимание.</span></p>
       <p class="small muted">GCN: Kipf &amp; Welling, ICLR 2017.</p>
     </div>
   </div>
@@ -120,20 +151,27 @@
 
 <!-- 4 ---------------------------------------------------------------- -->
 <section class="s" id="gat">
-  <h2><span class="num">4</span>GAT / GATv2: the network learns whom to listen to</h2>
+  <h2><span class="num">4</span><span class="en">GAT / GATv2: the network learns whom to listen to</span><span class="ru">GAT / GATv2: сеть учится, кого слушать</span></h2>
   <div class="grid2 even">
     <div class="prose">
       <div class="eq">$$e_{ij}=a^{\top}\,\mathrm{LeakyReLU}\big(W[h_i\,\|\,h_j]\big),\qquad \alpha_{ij}=\frac{\exp e_{ij}}{\sum_{k\in\mathcal N(i)\cup\{i\}}\exp e_{ik}},\qquad h_i'=\sigma\Big(\sum_{j}\alpha_{ij}\,W h_j\Big).$$</div>
-      <ul>
+      <ul class="en">
         <li>The weights $\alpha_{ij}$ depend on the <b>features</b> of both ends, so they change from input to input and from layer to layer.</li>
         <li>Each row of $\alpha$ is a probability distribution over the neighbourhood (it sums to 1).</li>
         <li>GATv2 applies the nonlinearity <i>before</i> the dot product with $a$. In the original GAT it came after, which made the ranking of neighbours the same for every query node (“static attention”).</li>
       </ul>
-      <p>Switch the playground to <b>GATv2</b> and change a neighbour's feature with the slider: the strokes and the matrix rows change, while in GCN they don't. The demo uses fixed parameters that favour neighbours similar to the receiving node. A trained model would learn $W$ and $a$.</p>
+      <ul class="ru">
+        <li>Веса $\alpha_{ij}$ зависят от <b>признаков</b> обеих вершин, поэтому меняются от входа к входу и от слоя к слою.</li>
+        <li>Каждая строка $\alpha$ — распределение вероятностей по окрестности (сумма равна 1).</li>
+        <li>В GATv2 нелинейность применяется <i>до</i> скалярного произведения с $a$. В исходном GAT — после, из-за чего порядок соседей был одинаковым для любой вершины («статическое внимание»).</li>
+      </ul>
+      <p class="en">Switch the playground to <b>GATv2</b> and change a neighbour's feature with the slider: the strokes and the matrix rows change, while in GCN they don't. The demo uses fixed parameters that favour neighbours similar to the receiving node; a trained model would learn $W$ and $a$.</p>
+      <p class="ru">Переключите песочницу на <b>GATv2</b> и измените признак соседа ползунком: штрихи и строки матрицы меняются, а в GCN — нет. В демонстрации параметры фиксированы и предпочитают соседей, похожих на принимающую вершину; обученная модель выучила бы $W$ и $a$ сама.</p>
     </div>
     <div class="prose">
       <div class="callout warn">
-        <b>Attention as an explanation for “where”.</b> It is tempting to read $\alpha_{ij}$ as “node $i$’s decision came from neighbour $j$” and to rank a source node this way. That reading assumes the edges carry information. If the network does just as well with no neighbours ($\Delta_G\approx0$), the weights only describe how the network spread its attention, not where an event came from.
+        <span class="en"><b>Attention as an explanation for “where”.</b> It is tempting to read $\alpha_{ij}$ as “node $i$’s decision came from neighbour $j$” and to rank a source node this way. That reading assumes the edges carry information. If the network does just as well with no neighbours ($\Delta_G\approx0$), the weights only describe how the network spread its attention, not where an event came from.</span>
+        <span class="ru"><b>Внимание как объяснение «где».</b> Соблазнительно читать $\alpha_{ij}$ как «решение вершины $i$ пришло от соседа $j$» и так ранжировать источник. Такое прочтение предполагает, что рёбра несут информацию. Если сеть справляется не хуже без соседей ($\Delta_G\approx0$), веса описывают лишь то, как сеть распределила внимание, а не откуда пришло событие.</span>
       </div>
       <p class="small muted">GAT: Veličković et al., ICLR 2018. GATv2: Brody, Alon &amp; Yahav, ICLR 2022.</p>
     </div>
@@ -141,214 +179,281 @@
 </section>
 
 <!-- 5 ---------------------------------------------------------------- -->
-<section class="s" id="noedges">
-  <h2><span class="num">5</span>What network is left when the edges are removed</h2>
-  <p class="sub">It is the same GCN or GATv2 with one change: the graph builder returns ∅. Every layer then becomes an ordinary fully connected layer applied to each node separately.</p>
-  <div class="grid2 even">
+<section class="s" id="train">
+  <h2><span class="num">5</span><span class="en">GNN vs MLP: training step by step</span><span class="ru">GNN и MLP: обучение шаг за шагом</span></h2>
+  <p class="sub"><span class="en">Both networks have the same layers (input 2 → hidden 4 → output 1), the same initial weights and the same 6 labelled nodes. The only difference: the GNN mixes each node's vector with its neighbours (Â) before each weight layer. Press <b>Next step</b> to walk through one training iteration: forward pass, loss, backpropagation, weight update.</span><span class="ru">У обеих сетей одинаковые слои (вход 2 → скрытый 4 → выход 1), одинаковые начальные веса и одни и те же 6 размеченных вершин. Единственное отличие: GNN перед каждым слоем весов смешивает вектор вершины с соседями (Â). Нажимайте <b>Следующий шаг</b>, чтобы пройти одну итерацию обучения: прямой проход, потери, обратное распространение, обновление весов.</span></p>
+  <div class="controls">
+    <button class="primary" id="trNext"><span class="en">Next step ▸</span><span class="ru">Следующий шаг ▸</span></button>
+    <button id="trEpoch"><span class="en">+1 epoch</span><span class="ru">+1 эпоха</span></button>
+    <button id="trPlay">▶ <span class="en">Train 100 epochs</span><span class="ru">Обучить 100 эпох</span></button>
+    <button id="trReset"><span class="en">Reset weights</span><span class="ru">Сбросить веса</span></button>
+  </div>
+  <div class="phase-list" id="trPhases"></div>
+  <div class="grid2">
     <div class="card">
-      <h4>GCN with $A=0$</h4>
-      <div class="eq">$$\tilde A=0+I=I,\quad \tilde D=I\ \Longrightarrow\ H^{(l+1)}=\sigma\big(H^{(l)}W^{(l)}\big)$$</div>
-      <div class="eq">$$h_i^{(l+1)}=\sigma\big(W^{(l)\top}h_i^{(l)}\big)\qquad\text{(only the node's own state; no messages)}$$</div>
-      <p>Two layers:</p>
-      <div class="eq">$$\hat y_i=\operatorname{softmax}\big(W_2\,\sigma(W_1x_i)\big)$$</div>
-      <p>This is a multilayer perceptron applied to every row $x_i$, with the weight matrices shared by all nodes.</p>
-      <h4 style="margin-top:14px">GATv2 with $A=0$</h4>
-      <div class="eq">$$\mathcal N(i)=\{i\}\ \Rightarrow\ \alpha_{ii}=\frac{e^{e_{ii}}}{e^{e_{ii}}}=1\ \Rightarrow\ h_i'=\sigma(Wh_i)$$</div>
-      <p class="small muted">The attention vector $a$ still exists but has no effect: a softmax over one element is always 1.</p>
+      <h4><span class="en">Network for the selected node</span><span class="ru">Сеть для выбранной вершины</span></h4>
+      <svg class="net" id="trNet"></svg>
+      <div class="legend"><span><span style="color:#e88020">━</span> <span class="en">positive weight</span><span class="ru">положительный вес</span></span><span><span style="color:#3466d6">━</span> <span class="en">negative weight</span><span class="ru">отрицательный вес</span></span><span><span style="color:var(--red)">━</span> <span class="en">gradient during backprop (thickness = |∂L/∂w|)</span><span class="ru">градиент при обратном проходе (толщина = |∂L/∂w|)</span></span><span><span class="en">neuron colour = activation</span><span class="ru">цвет нейрона = активация</span></span></div>
     </div>
-    <div>
-      <div class="card">
-        <h4>Kept vs lost</h4>
-        <table class="t">
-          <tr><th>kept</th><th>lost</th></tr>
-          <tr><td>the same input features $X$ (indicators from each node's own signal)</td><td rowspan="2">all information from neighbours: $\hat y_i=f(x_i)$, so two nodes with equal $x_i$ always get the same answer (<a href="#mp">twins A and B</a>)</td></tr>
-          <tr><td>the same layers, sizes, activation, optimiser, epochs, folds, seeds</td></tr>
-        </table>
+    <div class="card"><h4><span class="en">What happens now</span><span class="ru">Что происходит сейчас</span></h4><div class="train-text" id="trText"></div></div>
+  </div>
+  <div class="grid2 even" style="margin-top:14px">
+    <div class="card tight">
+      <div class="grid2 even" style="gap:10px">
+        <div><h4>MLP</h4><svg class="graph" id="trGmlp"></svg><p class="small muted" id="trAccMlp" style="margin:4px 0 0"></p></div>
+        <div><h4>GNN (GCN)</h4><svg class="graph" id="trGgnn"></svg><p class="small muted" id="trAccGnn" style="margin:4px 0 0"></p></div>
       </div>
-      <div class="card" style="margin-top:12px">
-        <h4>Why Δ<sub>G</sub> is measured against “GNN, A = ∅” and not against an MLP</h4>
-        <div class="eq">$$\Delta_G=\mathrm{score}\big(f_\theta(X,A)\big)-\mathrm{score}\big(f_\theta(X,\varnothing)\big)\quad\text{same }\theta\text{-init, folds, seeds}$$</div>
-        <table class="t">
-          <tr><th>comparison</th><th>what differs</th><th>isolates the graph?</th></tr>
-          <tr><td>GNN vs GNN with A = ∅</td><td>only the edges</td><td><span class="verdict yes">yes</span></td></tr>
-          <tr><td>GNN vs separate MLP</td><td>edges <i>and</i> architecture, width, learning rate, epochs, seeds</td><td><span class="verdict no">no</span></td></tr>
-          <tr><td>GNN with label-derived edges vs MLP</td><td>also: the label leaks through the edges</td><td><span class="verdict no">no, and inflated</span></td></tr>
-        </table>
-        <p class="small" style="margin-top:8px">Example from the text: on the brain data the MLP scores 0.868 and the network without edges 0.858. These are different models, so their gap says nothing about edges. In [@8CSXTP6C] a graph network scored 97 % against 83 % for an MLP. That gap mixes two effects: the architectures differ, and the label enters the edge weights.</p>
+      <div class="legend"><span><span class="en">fill = prediction (red/green, faint = unsure)</span><span class="ru">заливка = предсказание (красный/зелёный, бледно = неуверенно)</span></span><span><span class="en">thick ring = labelled (train), dashed = test</span><span class="ru">толстое кольцо = размеченная (обучение), пунктир = тест</span></span><span>✗ <span class="en">= wrong on test</span><span class="ru">= ошибка на тесте</span></span><span><span class="en">click a node to follow it in the network</span><span class="ru">клик по вершине — показать её в сети</span></span></div>
+    </div>
+    <div class="card tight">
+      <h4><span class="en">Training loss</span><span class="ru">Потери на обучении</span> <span class="small muted">(<span style="color:var(--accent)">━ GNN</span> · ╌ MLP)</span></h4>
+      <canvas class="plot" id="trCurve" style="aspect-ratio:420/150"></canvas>
+      <div class="scroll-x" style="margin-top:10px">
+      <table class="t">
+        <tr><th></th><th>MLP</th><th>GNN</th></tr>
+        <tr><td><span class="en">input layer</span><span class="ru">входной слой</span></td><td>$x_i$</td><td>$x_i$</td></tr>
+        <tr><td><span class="en">hidden layer</span><span class="ru">скрытый слой</span></td><td>$\tanh(x_iW_1+b_1)$</td><td>$\tanh\big((\hat AX)_iW_1+b_1\big)$</td></tr>
+        <tr><td><span class="en">output</span><span class="ru">выход</span></td><td>$\sigma(h_iw_2+b_2)$</td><td>$\sigma\big((\hat AH)_iw_2+b_2\big)$</td></tr>
+        <tr><td><span class="en">gradient reaches</span><span class="ru">градиент доходит до</span></td><td><span class="en">only node $i$'s own path</span><span class="ru">только пути самой вершины $i$</span></td><td><span class="en">node $i$ and its 2-hop neighbourhood (through $\hat A$)</span><span class="ru">вершины $i$ и её 2-окрестности (через $\hat A$)</span></td></tr>
+        <tr><td><span class="en">parameters</span><span class="ru">параметры</span></td><td colspan="2"><span class="en">identical: $W_1$ (2×4), $b_1$, $w_2$ (4), $b_2$ — the graph adds no parameters</span><span class="ru">одинаковые: $W_1$ (2×4), $b_1$, $w_2$ (4), $b_2$ — граф не добавляет параметров</span></td></tr>
+      </table>
       </div>
     </div>
   </div>
 </section>
 
 <!-- 6 ---------------------------------------------------------------- -->
+<section class="s" id="noedges">
+  <h2><span class="num">6</span><span class="en">What network is left when the edges are removed</span><span class="ru">Какая сеть остаётся, если удалить рёбра</span></h2>
+  <p class="sub"><span class="en">It is the same GCN or GATv2 with one change: the graph builder returns ∅. Every layer then becomes an ordinary fully connected layer applied to each node separately.</span><span class="ru">Это та же GCN или GATv2 с одним изменением: построитель графа возвращает ∅. Тогда каждый слой становится обычным полносвязным слоем, применённым к каждой вершине отдельно.</span></p>
+  <div class="grid2 even">
+    <div class="card">
+      <h4>GCN, $A=0$</h4>
+      <div class="eq">$$\tilde A=0+I=I,\quad \tilde D=I\ \Longrightarrow\ H^{(l+1)}=\sigma\big(H^{(l)}W^{(l)}\big)$$</div>
+      <div class="eq">$$h_i^{(l+1)}=\sigma\big(W^{(l)\top}h_i^{(l)}\big)$$</div>
+      <p><span class="en">Only the node's own state is used; no messages arrive. Two layers:</span><span class="ru">Используется только собственное состояние вершины; сообщения не приходят. Два слоя:</span></p>
+      <div class="eq">$$\hat y_i=\operatorname{softmax}\big(W_2\,\sigma(W_1x_i)\big)$$</div>
+      <p><span class="en">This is a multilayer perceptron applied to every row $x_i$, with the weight matrices shared by all nodes. In the training section above, this is exactly the MLP row.</span><span class="ru">Это многослойный перцептрон, применённый к каждой строке $x_i$, с общими для всех вершин матрицами весов. В разделе об обучении выше это в точности строка MLP.</span></p>
+      <h4 style="margin-top:14px">GATv2, $A=0$</h4>
+      <div class="eq">$$\mathcal N(i)=\{i\}\ \Rightarrow\ \alpha_{ii}=\frac{e^{e_{ii}}}{e^{e_{ii}}}=1\ \Rightarrow\ h_i'=\sigma(Wh_i)$$</div>
+      <p class="small muted"><span class="en">The attention vector $a$ still exists but has no effect: a softmax over one element is always 1.</span><span class="ru">Вектор внимания $a$ остаётся, но ни на что не влияет: softmax по одному элементу всегда равен 1.</span></p>
+    </div>
+    <div>
+      <div class="card">
+        <h4><span class="en">Kept vs lost</span><span class="ru">Что остаётся и что теряется</span></h4>
+        <table class="t">
+          <tr><th><span class="en">kept</span><span class="ru">остаётся</span></th><th><span class="en">lost</span><span class="ru">теряется</span></th></tr>
+          <tr><td><span class="en">the same input features $X$ (indicators from each node's own signal)</span><span class="ru">те же входные признаки $X$ (индикаторы по собственному сигналу вершины)</span></td><td rowspan="2"><span class="en">all information from neighbours: $\hat y_i=f(x_i)$, so two nodes with equal $x_i$ always get the same answer (<a href="#mp">twins A and B</a>)</span><span class="ru">вся информация от соседей: $\hat y_i=f(x_i)$, поэтому две вершины с равными $x_i$ всегда получают одинаковый ответ (<a href="#mp">близнецы A и B</a>)</span></td></tr>
+          <tr><td><span class="en">the same layers, sizes, activation, optimiser, epochs, folds, seeds</span><span class="ru">те же слои, размеры, активация, оптимизатор, эпохи, фолды, seed</span></td></tr>
+        </table>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h4><span class="en">Why Δ<sub>G</sub> is measured against “GNN, A = ∅” and not against an MLP</span><span class="ru">Почему Δ<sub>G</sub> считается относительно «GNN, A = ∅», а не MLP</span></h4>
+        <div class="eq">$$\Delta_G=\mathrm{score}\big(f_\theta(X,A)\big)-\mathrm{score}\big(f_\theta(X,\varnothing)\big)$$</div>
+        <table class="t">
+          <tr><th><span class="en">comparison</span><span class="ru">сравнение</span></th><th><span class="en">what differs</span><span class="ru">что отличается</span></th><th><span class="en">isolates the graph?</span><span class="ru">изолирует граф?</span></th></tr>
+          <tr><td>GNN vs GNN, A = ∅</td><td><span class="en">only the edges</span><span class="ru">только рёбра</span></td><td><span class="verdict yes"><span class="en">yes</span><span class="ru">да</span></span></td></tr>
+          <tr><td><span class="en">GNN vs separate MLP</span><span class="ru">GNN и отдельный MLP</span></td><td><span class="en">edges <i>and</i> architecture, width, learning rate, epochs, seeds</span><span class="ru">рёбра <i>и</i> архитектура, ширина, скорость обучения, эпохи, seed</span></td><td><span class="verdict no"><span class="en">no</span><span class="ru">нет</span></span></td></tr>
+          <tr><td><span class="en">GNN with label-derived edges vs MLP</span><span class="ru">GNN с рёбрами из меток и MLP</span></td><td><span class="en">also: the label leaks through the edges</span><span class="ru">ещё и утечка метки через рёбра</span></td><td><span class="verdict no"><span class="en">no, and inflated</span><span class="ru">нет, и завышено</span></span></td></tr>
+        </table>
+        <p class="small en" style="margin-top:8px">Example from the text: on the brain data the MLP scores 0.868 and the network without edges 0.858. These are different models, so their gap says nothing about edges. In [@8CSXTP6C] a graph network scored 97 % against 83 % for an MLP. That gap mixes two effects: the architectures differ, and the label enters the edge weights.</p>
+        <p class="small ru" style="margin-top:8px">Пример из текста: на данных мозга MLP даёт 0,868, а сеть без рёбер — 0,858. Это разные модели, и их разница ничего не говорит о рёбрах. В [@8CSXTP6C] графовая сеть набрала 97 % против 83 % у MLP. Эта разница смешивает два эффекта: архитектуры различаются, а метка входит в веса рёбер.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 ---------------------------------------------------------------- -->
 <section class="s" id="lab">
-  <h2><span class="num">6</span>Lab: does the graph help? Measure Δ<sub>G</sub> live</h2>
-  <p class="sub">The “GNN” here is a simplified graph convolution (SGC): $K$ rounds of $\hat A$ smoothing, then a small MLP head. The control is the identical pipeline with $A=\varnothing$. A third, independent MLP has its own hyper-parameters. Five stratified folds and fixed seeds are used, and everything is trained in your browser.</p>
+  <h2><span class="num">7</span><span class="en">Lab: does the graph help? Measure Δ<sub>G</sub> live</span><span class="ru">Лаборатория: помогает ли граф? Измеряем Δ<sub>G</sub></span></h2>
+  <p class="sub"><span class="en">The “GNN” here is a simplified graph convolution (SGC): $K$ rounds of $\hat A$ smoothing, then a small MLP head. The control is the identical pipeline with $A=\varnothing$. A third, independent MLP has its own hyper-parameters. Five stratified folds and fixed seeds; everything is trained in your browser.</span><span class="ru">«GNN» здесь — упрощённая графовая свёртка (SGC): $K$ раундов сглаживания $\hat A$, затем небольшая MLP-голова. Контроль — тот же конвейер с $A=\varnothing$. Третья, независимая MLP имеет свои гиперпараметры. Пять стратифицированных фолдов и фиксированные seed; всё обучается в браузере.</span></p>
   <div class="grid2">
     <div class="card">
       <div class="controls">
-        <div class="seg" id="labDs"><button data-d="sbm">Communities</button><button data-d="rand">Random edges</button><button data-d="chains">Chains</button><button data-d="circles">Circles</button></div>
+        <div class="seg" id="labDs"><button data-d="sbm"><span class="en">Communities</span><span class="ru">Сообщества</span></button><button data-d="rand"><span class="en">Random edges</span><span class="ru">Случайные рёбра</span></button><button data-d="chains"><span class="en">Chains</span><span class="ru">Цепочки</span></button><button data-d="circles"><span class="en">Circles</span><span class="ru">Окружности</span></button></div>
       </div>
       <p class="small muted" id="labDesc" style="margin:0 0 8px"></p>
       <canvas class="plot" id="labCanvas" style="aspect-ratio:640/460"></canvas>
       <div class="controls" style="margin-top:10px">
-        <label>k-NN graph, k <input type="range" id="labK" min="1" max="6" value="2"> <b id="labKv">2</b></label>
-        <label>hops K <input type="range" id="labHops" min="0" max="32" value="2"> <b id="labHopsV">2</b></label>
-        <label>colour by <select id="labColour"><option value="truth">true class</option><option value="gnn">GNN prediction</option><option value="empty">A = ∅ prediction</option><option value="mlp">MLP prediction</option></select></label>
+        <label><span class="en">k-NN graph, k</span><span class="ru">граф k-NN, k</span> <input type="range" id="labK" min="1" max="6" value="2"> <b id="labKv">2</b></label>
+        <label><span class="en">hops K</span><span class="ru">шаги K</span> <input type="range" id="labHops" min="0" max="32" value="2"> <b id="labHopsV">2</b></label>
+        <label><span class="en">colour by</span><span class="ru">цвет</span> <select id="labColour"><option value="truth">true class / истинный класс</option><option value="gnn">GNN</option><option value="empty">A = ∅</option><option value="mlp">MLP</option></select></label>
       </div>
-      <div class="legend"><span><i style="background:var(--red)"></i>red (minority)</span><span><i style="background:var(--green)"></i>green</span><span>faded + outlined = wrong prediction (out-of-fold)</span></div>
+      <div class="legend"><span><i style="background:var(--red)"></i><span class="en">red (minority)</span><span class="ru">красный (меньшинство)</span></span><span><i style="background:var(--green)"></i><span class="en">green</span><span class="ru">зелёный</span></span><span><span class="en">faded + outlined = wrong prediction (out-of-fold)</span><span class="ru">бледная с обводкой = ошибка (вне фолда)</span></span></div>
     </div>
     <div>
       <div class="stat-row" id="labStats"></div>
-      <div class="controls"><button class="primary" id="labRun">Train &amp; compare</button><button id="labSweepBtn">Sweep K</button></div>
+      <div class="controls"><button class="primary" id="labRun"><span class="en">Train &amp; compare</span><span class="ru">Обучить и сравнить</span></button><button id="labSweepBtn"><span class="en">Sweep K</span><span class="ru">Перебрать K</span></button></div>
       <div class="card tight" id="labResult"></div>
       <div class="card tight" style="margin-top:12px">
-        <h4>F1 against hops K <span class="small muted">(<span style="color:var(--accent)">━ GNN</span> · <span>╌ A = ∅</span> · <span style="color:var(--green)">┈ component size, no labels</span>)</span></h4>
+        <h4><span class="en">F1 against hops K</span><span class="ru">F1 в зависимости от K</span> <span class="small muted">(<span style="color:var(--accent)">━ GNN</span> · ╌ A = ∅ · <span style="color:var(--green)">┈ <span class="en">component size, no labels</span><span class="ru">размер компоненты, без меток</span></span>)</span></h4>
         <canvas class="plot" id="labSweep" style="aspect-ratio:420/200"></canvas>
       </div>
     </div>
   </div>
   <div class="grid2 even" style="margin-top:16px">
     <div class="callout">
-      <b>What to try.</b> <i>Communities</i>: Δ<sub>G</sub> &gt; 0 on every fold, because edges are homophilous and smoothing removes feature noise. <i>Random edges</i>: same features, same edge count, but Δ<sub>G</sub> ≈ 0 or negative. <i>Chains</i>: the class depends on chain length, which no local feature can see. Smoothing over K hops picks up only the chain ends and climbs slowly (statement 4 in <code>theory/graph-connectivity</code>: the full signal needs about 19 hops). Sweep K, and compare with the label-free component size at k = 2, which separates the classes perfectly (1.00 against 0.18 for the best local method). Then set k = 3: the chains merge and the component score collapses.
+      <span class="en"><b>What to try.</b> <i>Communities</i>: Δ<sub>G</sub> &gt; 0 on every fold, because edges are homophilous and smoothing removes feature noise. <i>Random edges</i>: same features, same edge count, but Δ<sub>G</sub> ≈ 0 or negative. <i>Chains</i>: the class depends on chain length, which no local feature can see. Smoothing over K hops picks up only the chain ends and climbs slowly (statement 4 in <code>theory/graph-connectivity</code>: the full signal needs about 19 hops). Sweep K, and compare with the label-free component size at k = 2, which separates the classes perfectly (1.00 against 0.18 for the best local method). Then set k = 3: the chains merge and the component score collapses.</span>
+      <span class="ru"><b>Что попробовать.</b> <i>Сообщества</i>: Δ<sub>G</sub> &gt; 0 на каждом фолде, потому что рёбра гомофильны и сглаживание убирает шум признаков. <i>Случайные рёбра</i>: те же признаки и столько же рёбер, но Δ<sub>G</sub> ≈ 0 или отрицательно. <i>Цепочки</i>: класс зависит от длины цепочки, которую не видит ни один локальный признак. Сглаживание на K шагов замечает только концы цепочек и растёт медленно (утверждение 4 в <code>theory/graph-connectivity</code>: полному сигналу нужно около 19 шагов). Переберите K и сравните с размером компоненты при k = 2 без меток, который разделяет классы идеально (1,00 против 0,18 у лучшего локального метода). Затем поставьте k = 3: цепочки сливаются, и оценка по компонентам рушится.</span>
     </div>
     <div class="prose">
-      <h3 style="margin-top:0">When a graph wins (rule from the chains case)</h3>
+      <h3 style="margin-top:0"><span class="en">When a graph wins (rule from the chains case)</span><span class="ru">Когда граф выигрывает (правило из примера с цепочками)</span></h3>
       <div class="eq">$$\text{(a)}\ h(A)\approx1,\qquad\text{(b)}\ \Pr\big(y_i=1\mid B_r(x_i)\big)\approx p,\qquad \Pr\big(y_i=1\mid\mathcal K(i)\big)\in\{0,1\}$$</div>
-      <p class="small">(a) the edges are homophilous; (b) the class is invisible in any small neighbourhood but fixed by a non-local structure such as the connected component $\mathcal K(i)$. Edges must also be built from features only: $A=A(x_1,\dots,x_n)$, never from $y$ or a proxy of $y$.</p>
+      <p class="small en">(a) the edges are homophilous; (b) the class is invisible in any small neighbourhood but fixed by a non-local structure such as the connected component $\mathcal K(i)$. Edges must also be built from features only: $A=A(x_1,\dots,x_n)$, never from $y$ or a proxy of $y$.</p>
+      <p class="small ru">(а) рёбра гомофильны; (б) класс не виден ни в какой малой окрестности, но определяется нелокальной структурой, например компонентой связности $\mathcal K(i)$. Кроме того, рёбра строятся только по признакам: $A=A(x_1,\dots,x_n)$, но не по $y$ и не по его заменителю.</p>
     </div>
   </div>
 </section>
 
-<!-- 7 ---------------------------------------------------------------- -->
+<!-- 8 ---------------------------------------------------------------- -->
 <section class="s" id="task">
-  <h2><span class="num">7</span>The task: “when” is defended without a graph, “where” needs Δ<sub>G</sub></h2>
-  <p class="sub">The edge check does not compute the moment or the source. It decides which part of the answer may rely on the graph. The demo shows both parts on a simulated sensor network (brain, engine or market; the logic is the same).</p>
+  <h2><span class="num">8</span><span class="en">The task: “when” is defended without a graph, “where” needs Δ<sub>G</sub></span><span class="ru">Задача: «когда» защищается без графа, «где» требует Δ<sub>G</sub></span></h2>
+  <p class="sub"><span class="en">The edge check does not compute the moment or the source. It decides which part of the answer may rely on the graph. The demo shows both parts on a simulated sensor network (brain, engine or market; the logic is the same).</span><span class="ru">Проверка рёбер не вычисляет ни момент, ни источник. Она решает, какая часть ответа может опираться на граф. Демонстрация показывает обе части на смоделированной сети датчиков (мозг, двигатель или рынок — логика одна).</span></p>
   <div class="grid2 even">
     <div class="card">
-      <h4>“When”: estimated moment $\hat t$</h4>
-      <ul class="small">
+      <h4><span class="en">“When”: estimated moment</span><span class="ru">«Когда»: оценка момента</span> $\hat t$</h4>
+      <ul class="small en">
         <li>The alarm comes from an extreme-value threshold fitted on <b>each node's own background</b>: peaks over a high quantile $u$, exponential (GPD, $\xi=0$) tail, threshold at exceedance probability $q$. No graph is involved.</li>
         <li>$\hat t=\min_i t_i^{\text{alarm}}$. Nothing in it depends on a graph hypothesis, so one implementation transfers unchanged between systems whose graphs are physically different.</li>
         <li>From the text: on benchmark R4 the alarm fires at sample 949 or 959 against a true onset at 932, in all four specification variants. The “when” answer is stable.</li>
       </ul>
+      <ul class="small ru">
+        <li>Тревога выдаётся по порогу теории экстремальных значений, подобранному по <b>собственному фону каждой вершины</b>: превышения высокого квантиля $u$, экспоненциальный хвост (GPD, $\xi=0$), порог при вероятности превышения $q$. Граф не участвует.</li>
+        <li>$\hat t=\min_i t_i^{\text{alarm}}$. Ничто здесь не зависит от графовой гипотезы, поэтому одна реализация без изменений переносится между системами с физически разными графами.</li>
+        <li>Из текста: на тесте R4 тревога срабатывает на отсчёте 949 или 959 при истинном начале 932 во всех четырёх вариантах спецификации. Ответ «когда» устойчив.</li>
+      </ul>
       <div class="eq">$$\Pr\big(x>u+z\mid x>u\big)\approx e^{-z/\sigma}\ \Rightarrow\ \text{thr}_i=u_i+\sigma_i\ln\frac{\hat\zeta_{u,i}}{q}$$</div>
     </div>
     <div class="card">
-      <h4>“Where”: source distribution $P(\hat s=v)$</h4>
-      <ul class="small">
+      <h4><span class="en">“Where”: source distribution</span><span class="ru">«Где»: распределение источника</span> $P(\hat s=v)$</h4>
+      <ul class="small en">
         <li>The source is ranked <b>through the graph</b>: in the dissertation through attention weights $\alpha_{ij}$. Here a transparent stand-in plays that role: it scores each candidate $v$ by how well the alarm times fit graph distances, $t_i\approx\tau+\delta\,d_G(v,i)$.</li>
         <li>That ranking only means something if the edges carry information. The edge check acts as a <b>filter</b>: with no confirmed contribution, the source answer is auxiliary and is not put forward as a result.</li>
         <li>From the text: 0 of 28 checks confirmed an edge contribution, and on R4 the source is right only 2 times out of 4 and is sensitive to the detector specification. In the chains example the opposite holds: the class is a property of the component, and the graph wins 1.00 against 0.18.</li>
+      </ul>
+      <ul class="small ru">
+        <li>Источник ранжируется <b>через граф</b>: в диссертации — через веса внимания $\alpha_{ij}$. Здесь их роль играет прозрачная замена: каждый кандидат $v$ оценивается по тому, насколько времена тревог согласуются с расстояниями по графу, $t_i\approx\tau+\delta\,d_G(v,i)$.</li>
+        <li>Такое ранжирование имеет смысл, только если рёбра несут информацию. Проверка рёбер работает как <b>фильтр</b>: без подтверждённого вклада ответ об источнике вспомогательный и не выносится как результат.</li>
+        <li>Из текста: 0 из 28 проверок подтвердили вклад рёбер, а на R4 источник верен лишь 2 раза из 4 и зависит от спецификации детектора. В примере с цепочками — обратная ситуация: класс есть свойство компоненты, и граф выигрывает 1,00 против 0,18.</li>
       </ul>
     </div>
   </div>
   <div class="grid2" style="margin-top:16px">
     <div class="card">
       <div class="controls">
-        <div class="seg" id="evGraph"><button class="on" data-g="true">Correct edges</button><button data-g="wrong">Wrong edges</button><button data-g="none">A = ∅</button></div>
-        <button id="evNew">New event</button>
-        <label>sensor gain spread <input type="range" id="evGain" min="0" max="0.9" step="0.05" value="0.9"> <b id="evGainV">0.90</b></label>
+        <div class="seg" id="evGraph"><button class="on" data-g="true"><span class="en">Correct edges</span><span class="ru">Верные рёбра</span></button><button data-g="wrong"><span class="en">Wrong edges</span><span class="ru">Неверные рёбра</span></button><button data-g="none">A = ∅</button></div>
+        <button id="evNew"><span class="en">New event</span><span class="ru">Новое событие</span></button>
+        <label><span class="en">sensor gain spread</span><span class="ru">разброс усиления датчиков</span> <input type="range" id="evGain" min="0" max="0.9" step="0.05" value="0.9"> <b id="evGainV">0.90</b></label>
       </div>
       <canvas class="plot" id="evTraces" style="aspect-ratio:560/360"></canvas>
-      <div class="legend"><span style="color:var(--red)">━ true source / t₀</span><span style="color:var(--accent)">━ alarm t̂</span><span style="color:var(--amber)">╌ per-node EVT threshold · ● first alarm</span></div>
+      <div class="legend"><span style="color:var(--red)">━ <span class="en">true source / t₀</span><span class="ru">истинный источник / t₀</span></span><span style="color:var(--accent)">━ <span class="en">alarm t̂</span><span class="ru">тревога t̂</span></span><span style="color:var(--amber)">╌ <span class="en">per-node EVT threshold · ● first alarm</span><span class="ru">порог EVT вершины · ● первая тревога</span></span></div>
     </div>
     <div>
       <div class="card tight">
         <svg class="graph" id="evSvg"></svg>
-        <div class="legend"><span>dotted: true propagation paths</span><span style="color:var(--accent)">solid: edges given to the model</span><span>halo size: P(ŝ = v)</span><span style="color:var(--red)">red ring: true source</span></div>
+        <div class="legend"><span><span class="en">dotted: true propagation paths</span><span class="ru">точки: истинные пути распространения</span></span><span style="color:var(--accent)"><span class="en">solid: edges given to the model</span><span class="ru">сплошные: рёбра, данные модели</span></span><span><span class="en">halo size</span><span class="ru">размер ореола</span>: P(ŝ = v)</span><span style="color:var(--red)"><span class="en">red ring: true source</span><span class="ru">красное кольцо: истинный источник</span></span></div>
       </div>
       <div id="evOut"></div>
     </div>
   </div>
   <div class="card" style="margin-top:14px">
-    <div class="controls"><button class="primary" id="evRun">Run the edge check (300 events)</button><span class="small muted">Δ<sub>G</sub> = accuracy of “where” with the given edges − accuracy with A = ∅, on identical events</span></div>
-    <div id="evMC"><p class="muted small">Not run yet.</p></div>
+    <div class="controls"><button class="primary" id="evRun"><span class="en">Run the edge check (300 events)</span><span class="ru">Запустить проверку рёбер (300 событий)</span></button><span class="small muted"><span class="en">Δ<sub>G</sub> = accuracy of “where” with the given edges − accuracy with A = ∅, on identical events</span><span class="ru">Δ<sub>G</sub> = точность «где» с данными рёбрами − точность с A = ∅ на тех же событиях</span></span></div>
+    <div id="evMC"><p class="muted small"><span class="en">Not run yet.</span><span class="ru">Ещё не запускалось.</span></p></div>
   </div>
   <div class="callout good" style="margin-top:14px">
-    <b>In short.</b> The check separates two cases. Either the answer comes from the node's own signal (“when”), which is defended because it doesn't depend on the graph. Or it would come from the edges (“where”), which is allowed only when the edge contribution is confirmed (the dissertation's rule (а)–(в)). With wrong edges the graph-based “where” looks just as confident in a single event, but over many events it does no better than the control.
+    <span class="en"><b>In short.</b> The check separates two cases. Either the answer comes from the node's own signal (“when”), which is defended because it doesn't depend on the graph. Or it would come from the edges (“where”), which is allowed only when the edge contribution is confirmed (the dissertation's rule (а)–(в)). With wrong edges the graph-based “where” looks just as confident in a single event, but over many events it does no better than the control.</span>
+    <span class="ru"><b>Коротко.</b> Проверка разделяет два случая. Либо ответ берётся из собственного сигнала вершины («когда») — он защищается, потому что не зависит от графа. Либо он шёл бы из рёбер («где») — это допустимо, только когда вклад рёбер подтверждён (правило (а)–(в) диссертации). С неверными рёбрами графовый ответ «где» в отдельном событии выглядит столь же уверенно, но на многих событиях он не лучше контроля.</span>
   </div>
 </section>
 
-<!-- 8 ---------------------------------------------------------------- -->
+<!-- 9 ---------------------------------------------------------------- -->
 <section class="s" id="hyper">
-  <h2><span class="num">8</span>Hyperbolic graphs: room for trees</h2>
-  <p class="sub">In a tree with branching $b$ the number of nodes at depth $d$ grows like $b^{d}$, but a Euclidean circle's length grows only linearly in its radius. Hyperbolic space grows exponentially, so trees and hierarchies embed with little distortion.</p>
+  <h2><span class="num">9</span><span class="en">Hyperbolic graphs: room for trees</span><span class="ru">Гиперболические графы: место для деревьев</span></h2>
+  <p class="sub"><span class="en">In a tree with branching $b$ the number of nodes at depth $d$ grows like $b^{d}$, but a Euclidean circle's length grows only linearly in its radius. Hyperbolic space grows exponentially, so trees and hierarchies embed with little distortion.</span><span class="ru">В дереве с ветвлением $b$ число вершин на глубине $d$ растёт как $b^{d}$, а длина евклидовой окружности растёт лишь линейно по радиусу. Гиперболическое пространство растёт экспоненциально, поэтому деревья и иерархии вкладываются в него с малым искажением.</span></p>
   <div class="grid2 even">
     <div class="card">
       <div class="controls">
-        <label>branching b <input type="range" id="hyB" min="2" max="4" value="3"> <b id="hyBv">3</b></label>
-        <label>depth <input type="range" id="hyD" min="1" max="6" value="4"> <b id="hyDv">4</b></label>
-        <button id="hyReset">Re-centre</button>
+        <label><span class="en">branching</span><span class="ru">ветвление</span> b <input type="range" id="hyB" min="2" max="4" value="3"> <b id="hyBv">3</b></label>
+        <label><span class="en">depth</span><span class="ru">глубина</span> <input type="range" id="hyD" min="1" max="6" value="4"> <b id="hyDv">4</b></label>
+        <button id="hyReset"><span class="en">Re-centre</span><span class="ru">Центрировать</span></button>
       </div>
       <div class="grid2 even" style="gap:10px">
-        <div><canvas class="plot" id="hyEuc" style="aspect-ratio:1"></canvas><p class="small muted" style="text-align:center;margin:4px 0">Euclidean disk</p></div>
-        <div><canvas class="plot" id="hyPoi" style="aspect-ratio:1;cursor:grab"></canvas><p class="small muted" style="text-align:center;margin:4px 0">Poincaré disk: drag to pan, click a node</p></div>
+        <div><canvas class="plot" id="hyEuc" style="aspect-ratio:1"></canvas><p class="small muted" style="text-align:center;margin:4px 0"><span class="en">Euclidean disk</span><span class="ru">Евклидов диск</span></p></div>
+        <div><canvas class="plot" id="hyPoi" style="aspect-ratio:1;cursor:grab"></canvas><p class="small muted" style="text-align:center;margin:4px 0"><span class="en">Poincaré disk: drag to pan, click a node</span><span class="ru">Диск Пуанкаре: тяните для сдвига, кликните по вершине</span></p></div>
       </div>
       <p class="small" id="hySel" style="min-height:1.5em"></p>
       <div class="stat-row" id="hyStats"></div>
       <p class="small muted" id="hyGrowth"></p>
     </div>
     <div class="prose">
-      <h3 style="margin-top:0">The Poincaré ball</h3>
+      <h3 style="margin-top:0"><span class="en">The Poincaré ball</span><span class="ru">Шар Пуанкаре</span></h3>
       <div class="eq">$$\mathbb B^n_c=\{x:\ c\|x\|^2<1\},\qquad d_{\mathbb B}(x,y)=\operatorname{arcosh}\!\Big(1+\frac{2\|x-y\|^2}{(1-\|x\|^2)(1-\|y\|^2)}\Big)\ \ (c=1)$$</div>
-      <ul>
+      <ul class="en">
         <li>Distances blow up near the boundary. Equal-looking gaps near the rim are huge, which is where the leaves live.</li>
         <li>Shortest paths (geodesics) are arcs orthogonal to the boundary, drawn as the tree edges on the right disk.</li>
         <li>Dragging applies a Möbius translation $z\mapsto\frac{z+a}{1+\bar a z}$, an isometry: the picture changes, but all hyperbolic distances stay the same. Any node can be brought to the centre.</li>
       </ul>
-      <div class="callout">Raise the depth to 5 or 6. The Euclidean disk crushes the leaves together (closest leaves ≪ 1 edge length) and the leaf-distance distortion explodes. With the same disk size, the Poincaré embedding keeps leaves several times farther apart and cuts the distortion several-fold. Leaves sit near the rim, so drag the disk to bring any branch to the centre.</div>
+      <ul class="ru">
+        <li>Расстояния резко растут у границы. Одинаковые на вид промежутки у края огромны — именно там живут листья.</li>
+        <li>Кратчайшие пути (геодезические) — дуги, перпендикулярные границе; так нарисованы рёбра дерева на правом диске.</li>
+        <li>Перетаскивание применяет сдвиг Мёбиуса $z\mapsto\frac{z+a}{1+\bar a z}$ — изометрию: картинка меняется, а все гиперболические расстояния сохраняются. Любую вершину можно перенести в центр.</li>
+      </ul>
+      <div class="callout"><span class="en">Raise the depth to 5 or 6. The Euclidean disk crushes the leaves together (closest leaves ≪ 1 edge length) and the leaf-distance distortion explodes. With the same disk size, the Poincaré embedding keeps leaves several times farther apart and cuts the distortion several-fold. Leaves sit near the rim, so drag the disk to bring any branch to the centre.</span><span class="ru">Увеличьте глубину до 5–6. Евклидов диск сжимает листья вместе (ближайшие листья ≪ 1 длины ребра), и искажение расстояний между листьями взлетает. При том же размере диска вложение Пуанкаре держит листья в несколько раз дальше друг от друга и в разы снижает искажение. Листья находятся у края — перетащите диск, чтобы вывести любую ветвь в центр.</span></div>
     </div>
   </div>
 
-  <h3>A hyperbolic GCN layer: lift, aggregate in the tangent space, map back</h3>
+  <h3><span class="en">A hyperbolic GCN layer: lift, aggregate in the tangent space, map back</span><span class="ru">Слой гиперболической GCN: поднять, агрегировать в касательном пространстве, вернуть</span></h3>
   <div class="grid2 even">
     <div class="card">
       <div class="grid2 even" style="gap:10px">
-        <div><canvas class="plot" id="hyTan" style="aspect-ratio:1;cursor:grab"></canvas><p class="small muted" style="text-align:center;margin:4px 0">ball: drag the blue neighbours</p></div>
-        <div><canvas class="plot" id="hyTanSpace" style="aspect-ratio:1"></canvas><p class="small muted" style="text-align:center;margin:4px 0">tangent space at the origin</p></div>
+        <div><canvas class="plot" id="hyTan" style="aspect-ratio:1;cursor:grab"></canvas><p class="small muted" style="text-align:center;margin:4px 0"><span class="en">ball: drag the blue neighbours</span><span class="ru">шар: перетаскивайте синих соседей</span></p></div>
+        <div><canvas class="plot" id="hyTanSpace" style="aspect-ratio:1"></canvas><p class="small muted" style="text-align:center;margin:4px 0"><span class="en">tangent space at the origin</span><span class="ru">касательное пространство в начале координат</span></p></div>
       </div>
-      <div class="legend"><span><i style="background:var(--accent)"></i>neighbours $x_j$ / $\log_0 x_j$</span><span><i style="background:var(--red)"></i>$\exp_0\big(\tfrac1n\sum\log_0x_j\big)$</span><span><i style="background:var(--muted)"></i>naive Euclidean average</span></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i><span class="en">neighbours</span><span class="ru">соседи</span> $x_j$ / $\log_0 x_j$</span><span><i style="background:var(--red)"></i>$\exp_0\big(\tfrac1n\sum\log_0x_j\big)$</span><span><i style="background:var(--muted)"></i><span class="en">naive Euclidean average</span><span class="ru">наивное евклидово среднее</span></span></div>
       <p class="small" id="hyTanOut"></p>
     </div>
     <div class="prose">
       <div class="eq">$$\exp_0^c(v)=\tanh\!\big(\sqrt c\,\|v\|\big)\frac{v}{\sqrt c\,\|v\|},\qquad \log_0^c(x)=\operatorname{artanh}\!\big(\sqrt c\,\|x\|\big)\frac{x}{\sqrt c\,\|x\|}$$</div>
       <div class="eq">$$h_i'=\exp_0^c\Big(\sigma\big(\textstyle\sum_j \hat A_{ij}\,W\log_0^c(h_j)\big)\Big)$$</div>
-      <p>Vector addition and matrix products are not defined inside the ball, so the layer moves to the tangent space (an ordinary $\mathbb R^n$), runs a normal GCN step there and maps back. This is what <code>HyperbolicGCN</code> in the repository does (<code>expmap0</code> → <code>GCNConv</code> on <code>logmap0</code> → <code>expmap0</code>), with a learned curvature $c$ (softplus).</p>
-      <div class="callout warn">The same edge check applies. Hyperbolic geometry helps if the <i>data</i> is tree-like. Whether the <i>edges</i> help is still measured by Δ<sub>G</sub> against the identical model with A = ∅. In the repository's overlay data a hyperbolic GCN does no better than a plain k-NN classifier, because only 33 % of a red node's edges lead to red.</div>
+      <p class="en">Vector addition and matrix products are not defined inside the ball, so the layer moves to the tangent space (an ordinary $\mathbb R^n$), runs a normal GCN step there and maps back. This is what <code>HyperbolicGCN</code> in the repository does (<code>expmap0</code> → <code>GCNConv</code> on <code>logmap0</code> → <code>expmap0</code>), with a learned curvature $c$ (softplus).</p>
+      <p class="ru">Сложение векторов и умножение на матрицу внутри шара не определены, поэтому слой переходит в касательное пространство (обычное $\mathbb R^n$), выполняет там обычный шаг GCN и возвращается обратно. Так устроена <code>HyperbolicGCN</code> в репозитории (<code>expmap0</code> → <code>GCNConv</code> по <code>logmap0</code> → <code>expmap0</code>) с обучаемой кривизной $c$ (softplus).</p>
+      <div class="callout warn"><span class="en">The same edge check applies. Hyperbolic geometry helps if the <i>data</i> is tree-like. Whether the <i>edges</i> help is still measured by Δ<sub>G</sub> against the identical model with A = ∅. In the repository's overlay data a hyperbolic GCN does no better than a plain k-NN classifier, because only 33 % of a red node's edges lead to red.</span><span class="ru">Та же проверка рёбер применима и здесь. Гиперболическая геометрия помогает, если <i>данные</i> древовидны. Помогают ли <i>рёбра</i> — по-прежнему измеряется Δ<sub>G</sub> относительно той же модели с A = ∅. На данных overlay из репозитория гиперболическая GCN не лучше обычного k-NN классификатора, потому что лишь 33 % рёбер красной вершины ведут к красным.</span></div>
       <p class="small muted">HGCN: Chami et al., NeurIPS 2019. HNN: Ganea, Bécigneul &amp; Hofmann, NeurIPS 2018. Poincaré embeddings: Nickel &amp; Kiela, NeurIPS 2017.</p>
     </div>
   </div>
 </section>
 
-<!-- 9 ---------------------------------------------------------------- -->
+<!-- 10 --------------------------------------------------------------- -->
 <section class="s" id="summary">
-  <h2><span class="num">9</span>Cheat sheet</h2>
+  <h2><span class="num">10</span><span class="en">Cheat sheet</span><span class="ru">Шпаргалка</span></h2>
   <div class="scroll-x">
   <table class="t">
-    <tr><th></th><th>MLP</th><th>GCN</th><th>GATv2</th><th>Hyperbolic GCN</th><th>GNN with A = ∅</th></tr>
-    <tr><td>message weight $c_{ij}$</td><td>none</td><td>$1/\sqrt{\tilde d_i\tilde d_j}$, fixed</td><td>$\alpha_{ij}$, learned from features</td><td>$\hat A_{ij}$ in tangent space</td><td>$\mathbb 1[i=j]$</td></tr>
-    <tr><td>prediction for $i$ uses</td><td>$x_i$</td><td>$L$-hop neighbourhood</td><td>$L$-hop neighbourhood, re-weighted</td><td>$L$-hop neighbourhood, curved space</td><td>$x_i$</td></tr>
-    <tr><td>equal $x_i$ ⇒ equal output?</td><td>yes</td><td>no</td><td>no</td><td>no</td><td>yes</td></tr>
-    <tr><td>good when</td><td>class is visible locally</td><td>homophilous edges</td><td>neighbours differ in relevance</td><td>tree-like / hierarchical data</td><td>it is the <b>control</b> for Δ<sub>G</sub></td></tr>
-    <tr><td>“where” via the graph allowed?</td><td>–</td><td colspan="3">only if Δ<sub>G</sub> &gt; 0 is confirmed on identical folds and seeds</td><td>–</td></tr>
+    <tr><th></th><th>MLP</th><th>GCN</th><th>GATv2</th><th><span class="en">Hyperbolic GCN</span><span class="ru">Гиперболическая GCN</span></th><th>GNN, A = ∅</th></tr>
+    <tr><td><span class="en">message weight</span><span class="ru">вес сообщения</span> $c_{ij}$</td><td>–</td><td>$1/\sqrt{\tilde d_i\tilde d_j}$<span class="en">, fixed</span><span class="ru">, фиксирован</span></td><td>$\alpha_{ij}$<span class="en">, from features</span><span class="ru">, по признакам</span></td><td>$\hat A_{ij}$ <span class="en">in tangent space</span><span class="ru">в касательном пр-ве</span></td><td>$\mathbb 1[i=j]$</td></tr>
+    <tr><td><span class="en">prediction for $i$ uses</span><span class="ru">предсказание для $i$ использует</span></td><td>$x_i$</td><td><span class="en">$L$-hop neighbourhood</span><span class="ru">$L$-окрестность</span></td><td><span class="en">$L$-hop, re-weighted</span><span class="ru">$L$-окрестность, перевзвешенную</span></td><td><span class="en">$L$-hop, curved space</span><span class="ru">$L$-окрестность, искривлённое пр-во</span></td><td>$x_i$</td></tr>
+    <tr><td><span class="en">equal $x_i$ ⇒ equal output?</span><span class="ru">равные $x_i$ ⇒ равный выход?</span></td><td><span class="en">yes</span><span class="ru">да</span></td><td><span class="en">no</span><span class="ru">нет</span></td><td><span class="en">no</span><span class="ru">нет</span></td><td><span class="en">no</span><span class="ru">нет</span></td><td><span class="en">yes</span><span class="ru">да</span></td></tr>
+    <tr><td><span class="en">good when</span><span class="ru">хорош, когда</span></td><td><span class="en">class is visible locally</span><span class="ru">класс виден локально</span></td><td><span class="en">homophilous edges</span><span class="ru">рёбра гомофильны</span></td><td><span class="en">neighbours differ in relevance</span><span class="ru">соседи различаются по важности</span></td><td><span class="en">tree-like data</span><span class="ru">данные древовидны</span></td><td><span class="en">it is the <b>control</b> for Δ<sub>G</sub></span><span class="ru">это <b>контроль</b> для Δ<sub>G</sub></span></td></tr>
+    <tr><td><span class="en">“where” via the graph allowed?</span><span class="ru">«где» через граф допустимо?</span></td><td>–</td><td colspan="3"><span class="en">only if Δ<sub>G</sub> &gt; 0 is confirmed on identical folds and seeds</span><span class="ru">только если Δ<sub>G</sub> &gt; 0 подтверждено на тех же фолдах и seed</span></td><td>–</td></tr>
   </table>
   </div>
 </section>
 
 <footer>
-  Part of <a href="https://github.com/D2718281828nis/ML-MachineLearning-Graphs">ML-MachineLearning-Graphs</a>. Datasets: <code>datasets/df_red_green_chains.csv</code>, <code>df_red_green_circles.csv</code>. Theory: <code>theory/graph-connectivity</code>, <code>theory/hyperbolic-graphs</code>. All models on this page are small teaching versions trained in the browser. Their numbers illustrate the method; they are not results from the dissertation. Numbers quoted “from the text” are taken from the dissertation excerpt.
+  <span class="en">Part of</span><span class="ru">Часть репозитория</span> <a href="https://github.com/D2718281828nis/ML-MachineLearning-Graphs">ML-MachineLearning-Graphs</a>. <span class="en">Datasets</span><span class="ru">Данные</span>: <code>datasets/df_red_green_chains.csv</code>, <code>df_red_green_circles.csv</code>. <span class="en">Theory</span><span class="ru">Теория</span>: <code>theory/graph-connectivity</code>, <code>theory/hyperbolic-graphs</code>.
+  <span class="en">All models on this page are small teaching versions trained in the browser. Their numbers illustrate the method; they are not results from the dissertation. Numbers quoted “from the text” are taken from the dissertation excerpt.</span>
+  <span class="ru">Все модели на странице — небольшие учебные версии, обучаемые в браузере. Их числа иллюстрируют метод и не являются результатами диссертации. Числа с пометкой «из текста» взяты из фрагмента диссертации.</span>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-<script src="assets/data.js"></script>
-<script src="assets/common.js"></script>
-<script>U.initTheme();</script>
-<script src="assets/mp.js"></script>
-<script src="assets/lab.js"></script>
-<script src="assets/event.js"></script>
-<script src="assets/hyper.js"></script>
+<script src="assets/data.js?v=3"></script>
+<script src="assets/common.js?v=3"></script>
+<script>U.initTheme(); U.initLang();</script>
+<script src="assets/mp.js?v=3"></script>
+<script src="assets/train.js?v=3"></script>
+<script src="assets/lab.js?v=3"></script>
+<script src="assets/event.js?v=3"></script>
+<script src="assets/hyper.js?v=3"></script>
 <script>
   if (window.renderMathInElement) renderMathInElement(document.body, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], throwOnError: false });
   const links = [...document.querySelectorAll('nav.top a.l')];

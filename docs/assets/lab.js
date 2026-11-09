@@ -76,10 +76,10 @@
   function stats() {
     const s = st.stats;
     document.getElementById('labStats').innerHTML = `
-      <div class="stat"><div class="v">${y().length}</div><div class="k">nodes · red share p = ${U.fmt(s.p)}</div></div>
-      <div class="stat"><div class="v">${U.fmt(s.avgdeg, 1)}</div><div class="k">mean degree</div></div>
-      <div class="stat"><div class="v">${U.fmt(s.h1)}</div><div class="k">h₁: share of a red node's edges to red (≈ p ⇒ no signal)</div></div>
-      <div class="stat"><div class="v">${s.ncomp}</div><div class="k">connected components · size-score F1 = ${U.fmt(s.compF1)}</div></div>`;
+      <div class="stat"><div class="v">${y().length}</div><div class="k">${U.t('nodes · red share', 'вершин · доля красных')} p = ${U.fmt(s.p)}</div></div>
+      <div class="stat"><div class="v">${U.fmt(s.avgdeg, 1)}</div><div class="k">${U.t('mean degree', 'средняя степень')}</div></div>
+      <div class="stat"><div class="v">${U.fmt(s.h1)}</div><div class="k">${U.t("h₁: share of a red node's edges to red (≈ p ⇒ no signal)", 'h₁: доля рёбер красной вершины, ведущих к красным (≈ p ⇒ сигнала нет)')}</div></div>
+      <div class="stat"><div class="v">${s.ncomp}</div><div class="k">${U.t('connected components', 'компонент связности')}${st.ds === 'chains' || st.ds === 'circles' ? ` · ${U.t('size-score', 'оценка по размеру')} F1 = ${U.fmt(s.compF1)}` : ''}</div></div>`;
   }
   const y = () => st.data.y;
 
@@ -111,23 +111,23 @@
   function run() {
     if (st.busy) return; st.busy = true;
     const out = document.getElementById('labResult');
-    out.innerHTML = '<p class="muted">Training 3 models × 5 folds in your browser…</p>';
+    out.innerHTML = `<p class="muted">${U.t('Training 3 models × 5 folds in your browser…', 'Обучаем 3 модели × 5 фолдов в браузере…')}</p>`;
     setTimeout(() => {
       const r = evalModels(st.K, true); st.res = r; st.busy = false;
       const d = r.g.map((v, i) => v - r.e[i]), dm = mean(d);
       const allPos = d.every((v) => v > 0);
-      const verdict = allPos && dm > 0.02 ? '<span class="verdict yes">edge contribution confirmed</span>'
-        : dm < -0.02 ? '<span class="verdict no">edges hurt (Δ_G &lt; 0)</span>' : '<span class="verdict no">not confirmed (Δ_G ≈ 0)</span>';
+      const verdict = allPos && dm > 0.02 ? `<span class="verdict yes">${U.t('edge contribution confirmed', 'вклад рёбер подтверждён')}</span>`
+        : dm < -0.02 ? `<span class="verdict no">${U.t('edges hurt (Δ_G &lt; 0)', 'рёбра мешают (Δ_G &lt; 0)')}</span>` : `<span class="verdict no">${U.t('not confirmed (Δ_G ≈ 0)', 'не подтверждён (Δ_G ≈ 0)')}</span>`;
       out.innerHTML = `
         <table class="t">
-          <tr><th>model</th><th>what it sees</th><th>F1 (red), 5 folds</th></tr>
-          <tr><td><b>GNN</b> (K=${st.K} hops)</td><td>Â<sup>K</sup>X → same MLP head</td><td class="n">${U.fmt(mean(r.g))} ± ${U.fmt(sd(r.g))}</td></tr>
-          <tr><td><b>GNN, A = ∅</b></td><td>X → same head, same seeds, folds</td><td class="n">${U.fmt(mean(r.e))} ± ${U.fmt(sd(r.e))}</td></tr>
-          <tr><td>MLP baseline</td><td>X, own hyper-parameters</td><td class="n">${U.fmt(mean(r.m))} ± ${U.fmt(sd(r.m))}</td></tr>
+          <tr><th>${U.t('model', 'модель')}</th><th>${U.t('what it sees', 'что видит')}</th><th>F1 (${U.t('red', 'красные')}), ${U.t('5 folds', '5 фолдов')}</th></tr>
+          <tr><td><b>GNN</b> (K=${st.K})</td><td>Â<sup>K</sup>X → ${U.t('same MLP head', 'та же MLP-голова')}</td><td class="n">${U.fmt(mean(r.g))} ± ${U.fmt(sd(r.g))}</td></tr>
+          <tr><td><b>GNN, A = ∅</b></td><td>X → ${U.t('same head, same seeds, folds', 'та же голова, те же seed и фолды')}</td><td class="n">${U.fmt(mean(r.e))} ± ${U.fmt(sd(r.e))}</td></tr>
+          <tr><td>MLP</td><td>X, ${U.t('own hyper-parameters', 'свои гиперпараметры')}</td><td class="n">${U.fmt(mean(r.m))} ± ${U.fmt(sd(r.m))}</td></tr>
         </table>
-        <p style="margin:10px 0 4px"><b>Δ_G = F1(GNN) − F1(GNN, A=∅) = ${dm >= 0 ? '+' : ''}${U.fmt(dm, 3)}</b> &nbsp;(per fold: ${d.map((v) => (v >= 0 ? '+' : '') + v.toFixed(2)).join(', ')})</p>
+        <p style="margin:10px 0 4px"><b>Δ_G = F1(GNN) − F1(GNN, A=∅) = ${dm >= 0 ? '+' : ''}${U.fmt(dm, 3)}</b> &nbsp;(${U.t('per fold', 'по фолдам')}: ${d.map((v) => (v >= 0 ? '+' : '') + v.toFixed(2)).join(', ')})</p>
         <p style="margin:4px 0">${verdict}</p>
-        <p class="small muted">The MLP row differs from the A = ∅ row only because the models differ (width, learning rate, epochs, seeds). That gap says nothing about edges, which is why Δ_G uses the A = ∅ control.</p>`;
+        <p class="small muted">${U.t('The MLP row differs from the A = ∅ row only because the models differ (width, learning rate, epochs, seeds). That gap says nothing about edges, which is why Δ_G uses the A = ∅ control.', 'Строка MLP отличается от строки A = ∅ только потому, что это разные модели (ширина, скорость обучения, эпохи, seed). Эта разница ничего не говорит о рёбрах, поэтому Δ_G считается относительно контроля A = ∅.')}</p>`;
       draw();
     }, 30);
   }
@@ -172,8 +172,8 @@
     ctx.strokeStyle = U.css('--line'); ctx.fillStyle = U.css('--muted'); ctx.font = '11px system-ui'; ctx.lineWidth = 1;
     [0, 0.25, 0.5, 0.75, 1].forEach((v) => { ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(w - m.r, Y(v)); ctx.stroke(); ctx.fillText(v.toFixed(2), 2, Y(v) + 4); });
     [0, 4, 8, 12, 16, 20, 24, 32].forEach((k) => ctx.fillText(String(k), X(k) - 4, h - 8));
-    ctx.fillText('hops K', w - 52, h - 8);
-    if (!st.sweep || !st.sweep.length) { ctx.fillText('Press “Sweep K” to plot F1 against the number of hops.', m.l + 8, Y(0.55)); return; }
+    ctx.fillText(U.t('hops K', 'шаги K'), w - 52, h - 8);
+    if (!st.sweep || !st.sweep.length) { ctx.fillText(U.t('Press “Sweep K” to plot F1 against the number of hops.', 'Нажмите «Перебрать K», чтобы построить F1 от числа шагов.'), m.l + 8, Y(0.55)); return; }
     const line = (idx, col, dash) => {
       ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.setLineDash(dash); ctx.beginPath();
       st.sweep.forEach((p, t) => (t ? ctx.lineTo(X(p[0]), Y(p[idx])) : ctx.moveTo(X(p[0]), Y(p[idx])))); ctx.stroke(); ctx.setLineDash([]);
@@ -185,26 +185,31 @@
     }
   }
 
-  const desc = {
-    sbm: 'Homophilous communities: red nodes sit in two red communities, features are weak (heavily overlapping Gaussians). Edges carry the label signal, so averaging over neighbours denoises features.',
-    rand: 'Same nodes, same features, same number of edges, but edges are wired at random. The graph now carries no label information: h₁ ≈ p.',
-    chains: 'Repository dataset datasets/df_red_green_chains.csv. Every point locally looks the same (two neighbours ~12 px away); only the chain length differs (red ≈ 38, green 9–20). Features are local k-NN distances, so the A = ∅ model cannot see the class.',
-    circles: 'Repository dataset datasets/df_red_green_circles.csv: closed loops have no ends, but small green circles bend more sharply, so the 5th-neighbour distance already separates the classes fairly well (the repository reports 0.82 for the best local method). Here the graph adds less, and over a stronger baseline.',
-  };
+  const desc = () => ({
+    sbm: U.t('Homophilous communities: red nodes sit in two red communities, features are weak (heavily overlapping Gaussians). Edges carry the label signal, so averaging over neighbours denoises features.',
+      'Гомофильные сообщества: красные вершины образуют два красных сообщества, признаки слабые (сильно перекрывающиеся гауссианы). Рёбра несут сигнал о классе, поэтому усреднение по соседям убирает шум.'),
+    rand: U.t('Same nodes, same features, same number of edges, but edges are wired at random. The graph now carries no label information: h₁ ≈ p.',
+      'Те же вершины, те же признаки и столько же рёбер, но рёбра проведены случайно. Граф больше не несёт информации о классе: h₁ ≈ p.'),
+    chains: U.t('Repository dataset datasets/df_red_green_chains.csv. Every point locally looks the same (two neighbours ~12 px away); only the chain length differs (red ≈ 38, green 9–20). Features are local k-NN distances, so the A = ∅ model cannot see the class.',
+      'Датасет репозитория datasets/df_red_green_chains.csv. Локально все точки выглядят одинаково (два соседа на расстоянии ~12 px); различается только длина цепочки (красные ≈ 38, зелёные 9–20). Признаки — локальные расстояния k-NN, поэтому модель с A = ∅ не видит класс.'),
+    circles: U.t('Repository dataset datasets/df_red_green_circles.csv: closed loops have no ends, but small green circles bend more sharply, so the 5th-neighbour distance already separates the classes fairly well (the repository reports 0.82 for the best local method). Here the graph adds less, and over a stronger baseline.',
+      'Датасет репозитория datasets/df_red_green_circles.csv: у замкнутых окружностей нет концов, но маленькие зелёные окружности изогнуты сильнее, поэтому расстояние до 5-го соседа уже неплохо разделяет классы (в репозитории лучший локальный метод даёт 0,82). Здесь граф добавляет меньше и поверх более сильного базового уровня.'),
+  });
   function setDs(ds) {
     st.ds = ds;
     document.querySelectorAll('#labDs button').forEach((b) => b.classList.toggle('on', b.dataset.d === ds));
     document.getElementById('labK').disabled = ds === 'sbm' || ds === 'rand';
-    document.getElementById('labDesc').textContent = desc[ds];
-    document.getElementById('labResult').innerHTML = '<p class="muted">Press “Train &amp; compare”.</p>';
+    document.getElementById('labDesc').textContent = desc()[ds];
+    document.getElementById('labResult').innerHTML = `<p class="muted">${U.t('Press “Train &amp; compare”.', 'Нажмите «Обучить и сравнить».')}</p>`;
     build();
   }
   document.querySelectorAll('#labDs button').forEach((b) => b.addEventListener('click', () => setDs(b.dataset.d)));
-  document.getElementById('labK').addEventListener('input', (e) => { st.k = +e.target.value; document.getElementById('labKv').textContent = st.k; build(); document.getElementById('labResult').innerHTML = '<p class="muted">Graph rebuilt. Press “Train &amp; compare”.</p>'; });
+  document.getElementById('labK').addEventListener('input', (e) => { st.k = +e.target.value; document.getElementById('labKv').textContent = st.k; build(); document.getElementById('labResult').innerHTML = `<p class="muted">${U.t('Graph rebuilt. Press “Train &amp; compare”.', 'Граф перестроен. Нажмите «Обучить и сравнить».')}</p>`; });
   document.getElementById('labHops').addEventListener('input', (e) => { st.K = +e.target.value; document.getElementById('labHopsV').textContent = st.K; });
   document.getElementById('labRun').addEventListener('click', run);
   document.getElementById('labSweepBtn').addEventListener('click', sweep);
   document.getElementById('labColour').addEventListener('change', (e) => { st.colour = e.target.value; draw(); });
   U.onTheme.push(() => { if (st.data) { draw(); drawSweep(); } });
+  U.onLang.push(() => { if (st.data) { stats(); drawSweep(); document.getElementById('labDesc').textContent = desc()[st.ds]; if (st.res) run(); else document.getElementById('labResult').innerHTML = `<p class="muted">${U.t('Press “Train &amp; compare”.', 'Нажмите «Обучить и сравнить».')}</p>`; } });
   setDs('sbm');
 })();

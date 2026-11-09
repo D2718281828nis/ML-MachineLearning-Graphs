@@ -87,7 +87,7 @@
       U.el('circle', { r: 9, fill: U.css('--panel'), stroke: i === ev.src ? red : ink, 'stroke-width': i === ev.src ? 3 : 1.2 }, g);
       U.el('text', { y: 4, 'text-anchor': 'middle', 'font-size': 10, fill: ink, text: String(i) }, g);
       const k = order.indexOf(i);
-      if (k >= 0 && k < 3) U.el('text', { x: 12, y: -10, 'font-size': 10, fill: U.css('--amber'), text: `#${k + 1} alarm` }, g);
+      if (k >= 0 && k < 3) U.el('text', { x: 12, y: -10, 'font-size': 10, fill: U.css('--amber'), text: `#${k + 1} ${U.t('alarm', 'тревога')}` }, g);
       U.el('text', { y: 24, 'text-anchor': 'middle', 'font-size': 9.5, fill: muted, text: `P=${U.fmt(Pv[i])}` }, g);
     }
     // traces
@@ -95,12 +95,12 @@
     const whenErr = ev.that === null ? '–' : (ev.that - ev.t0);
     document.getElementById('evOut').innerHTML = `
       <div class="stat-row">
-        <div class="stat"><div class="v">${ev.t0}</div><div class="k">true onset t₀</div></div>
-        <div class="stat"><div class="v">${ev.that ?? '–'}</div><div class="k">alarm t̂ (no graph used) · delay ${whenErr}</div></div>
-        <div class="stat"><div class="v">${ev.src}</div><div class="k">true source s</div></div>
-        <div class="stat"><div class="v" style="color:${best === ev.src ? U.css('--green') : U.css('--red')}">${best}</div><div class="k">argmax P(ŝ = v) with ${st.graph === 'true' ? 'correct' : st.graph === 'wrong' ? 'wrong' : 'no'} edges</div></div>
+        <div class="stat"><div class="v">${ev.t0}</div><div class="k">${U.t('true onset t₀', 'истинное начало t₀')}</div></div>
+        <div class="stat"><div class="v">${ev.that ?? '–'}</div><div class="k">${U.t('alarm t̂ (no graph used) · delay', 'тревога t̂ (граф не используется) · задержка')} ${whenErr}</div></div>
+        <div class="stat"><div class="v">${ev.src}</div><div class="k">${U.t('true source s', 'истинный источник s')}</div></div>
+        <div class="stat"><div class="v" style="color:${best === ev.src ? U.css('--green') : U.css('--red')}">${best}</div><div class="k">argmax P(ŝ = v), ${st.graph === 'true' ? U.t('correct edges', 'верные рёбра') : st.graph === 'wrong' ? U.t('wrong edges', 'неверные рёбра') : U.t('no edges', 'без рёбер')}</div></div>
       </div>
-      <p class="small muted">Switch the observed graph: t̂ stays exactly the same, because the alarm is computed per node from its own background. Only P(ŝ = v) changes.</p>`;
+      <p class="small muted">${U.t('Switch the observed graph: t̂ stays exactly the same, because the alarm is computed per node from its own background. Only P(ŝ = v) changes.', 'Переключите наблюдаемый граф: t̂ не меняется, потому что тревога вычисляется для каждой вершины по её собственному фону. Меняется только P(ŝ = v).')}</p>`;
   }
 
   function drawTraces(ev) {
@@ -108,7 +108,7 @@
     ctx.clearRect(0, 0, w, h);
     const m = { l: 26, r: 8, t: 8, b: 20 }, rowH = (h - m.t - m.b) / N, X = (t) => m.l + (t / T) * (w - m.l - m.r);
     ctx.fillStyle = U.css('--code'); ctx.fillRect(X(0), m.t, X(BG) - X(0), h - m.t - m.b);
-    ctx.font = '10px system-ui'; ctx.fillStyle = U.css('--muted'); ctx.fillText('background window (EVT fit)', X(4), h - 6);
+    ctx.font = '10px system-ui'; ctx.fillStyle = U.css('--muted'); ctx.fillText(U.t('background window (EVT fit)', 'фоновое окно (подгонка EVT)'), X(4), h - 6);
     for (let i = 0; i < N; i++) {
       const y0 = m.t + rowH * (i + 0.72), sc = rowH / 7, row = ev.X[i];
       ctx.fillStyle = U.css('--muted'); ctx.fillText(String(i), 4, y0);
@@ -125,7 +125,7 @@
 
   function monteCarlo() {
     const out = document.getElementById('evMC');
-    out.innerHTML = '<p class="muted">Running 300 simulated events…</p>';
+    out.innerHTML = `<p class="muted">${U.t('Running 300 simulated events…', 'Моделируем 300 событий…')}</p>`;
     setTimeout(() => {
       const n = 300, acc = { true: 0, wrong: 0, none: 0 }, delays = [];
       for (let k = 0; k < n; k++) {
@@ -138,15 +138,15 @@
       }
       const a = (g) => acc[g] / n, med = delays.sort((x, y) => x - y)[Math.floor(delays.length / 2)];
       const dTrue = a('true') - a('none'), dWrong = a('wrong') - a('none');
-      const v = (d) => (d > 0.05 ? '<span class="verdict yes">confirmed: “where” may be reported</span>' : '<span class="verdict no">not confirmed: “where” is auxiliary only</span>');
+      const v = (d) => (d > 0.05 ? `<span class="verdict yes">${U.t('confirmed: “where” may be reported', 'подтверждён: «где» можно выносить как результат')}</span>` : `<span class="verdict no">${U.t('not confirmed: “where” is auxiliary only', 'не подтверждён: «где» — только вспомогательный ответ')}</span>`);
       out.innerHTML = `
         <table class="t">
-          <tr><th>observed graph</th><th>source top-1 accuracy</th><th>Δ_G vs A = ∅</th><th>verdict for “where”</th></tr>
-          <tr><td>correct edges</td><td class="n">${U.fmt(a('true'))}</td><td class="n">${dTrue >= 0 ? '+' : ''}${U.fmt(dTrue)}</td><td>${v(dTrue)}</td></tr>
-          <tr><td>wrong edges (same count)</td><td class="n">${U.fmt(a('wrong'))}</td><td class="n">${dWrong >= 0 ? '+' : ''}${U.fmt(dWrong)}</td><td>${v(dWrong)}</td></tr>
-          <tr><td>A = ∅ (control)</td><td class="n">${U.fmt(a('none'))}</td><td class="n">0</td><td class="muted">reference</td></tr>
+          <tr><th>${U.t('observed graph', 'наблюдаемый граф')}</th><th>${U.t('source top-1 accuracy', 'точность источника (top-1)')}</th><th>Δ_G ${U.t('vs', 'относительно')} A = ∅</th><th>${U.t('verdict for “where”', 'вывод для «где»')}</th></tr>
+          <tr><td>${U.t('correct edges', 'верные рёбра')}</td><td class="n">${U.fmt(a('true'))}</td><td class="n">${dTrue >= 0 ? '+' : ''}${U.fmt(dTrue)}</td><td>${v(dTrue)}</td></tr>
+          <tr><td>${U.t('wrong edges (same count)', 'неверные рёбра (столько же)')}</td><td class="n">${U.fmt(a('wrong'))}</td><td class="n">${dWrong >= 0 ? '+' : ''}${U.fmt(dWrong)}</td><td>${v(dWrong)}</td></tr>
+          <tr><td>A = ∅ (${U.t('control', 'контроль')})</td><td class="n">${U.fmt(a('none'))}</td><td class="n">0</td><td class="muted">${U.t('reference', 'эталон')}</td></tr>
         </table>
-        <p class="small" style="margin-top:8px">“When”: median alarm delay t̂ − t₀ = <b>${med}</b> samples, alarms in ${delays.length}/${n} events, <b>identical for all three graphs</b> (chance level for “where” is 1/${N} ≈ ${U.fmt(1 / N)}).</p>`;
+        <p class="small" style="margin-top:8px">${U.t('“When”: median alarm delay', '«Когда»: медианная задержка тревоги')} t̂ − t₀ = <b>${med}</b> ${U.t('samples, alarms in', 'отсчётов, тревога в')} ${delays.length}/${n} ${U.t('events,', 'событиях,')} <b>${U.t('identical for all three graphs', 'одинаково для всех трёх графов')}</b> (${U.t('chance level for “where” is', 'случайный уровень для «где»:')} 1/${N} ≈ ${U.fmt(1 / N)}).</p>`;
     }, 30);
   }
 
@@ -157,5 +157,6 @@
   document.getElementById('evRun').addEventListener('click', monteCarlo);
   document.getElementById('evGain').addEventListener('input', (e) => { st.gain = +e.target.value; document.getElementById('evGainV').textContent = U.fmt(st.gain); newEvent(); });
   U.onTheme.push(() => st.ev && render());
+  U.onLang.push(() => { if (st.ev) render(); if (document.querySelector('#evMC table')) monteCarlo(); else document.getElementById('evMC').innerHTML = `<p class="muted small">${U.t('Not run yet.', 'Ещё не запускалось.')}</p>`; });
   newEvent();
 })();

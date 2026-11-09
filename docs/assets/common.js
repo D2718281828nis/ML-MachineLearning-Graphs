@@ -187,5 +187,26 @@
     });
   };
 
+  /* Language: html[lang] toggles .en / .ru blocks in CSS; JS strings use U.t(en, ru). */
+  U.onLang = [];
+  U.lang = () => (document.documentElement.lang === 'ru' ? 'ru' : 'en');
+  U.t = (en, ru) => (U.lang() === 'ru' ? ru : en);
+  U.setLang = function (l) {
+    document.documentElement.lang = l;
+    try { localStorage.setItem('gnn-lang', l); } catch (e) { /* ignore */ }
+    document.querySelectorAll('#langSeg button').forEach((b) => b.classList.toggle('on', b.dataset.l === l));
+    document.title = l === 'ru' ? 'Графовые нейронные сети — интерактивно' : 'Graph Neural Networks, Interactively';
+    U.onLang.forEach((f) => f());
+  };
+  U.initLang = function () {
+    let l = null;
+    try { l = localStorage.getItem('gnn-lang'); } catch (e) { /* ignore */ }
+    const q = new URLSearchParams(location.search).get('lang');
+    if (q === 'ru' || q === 'en') l = q;
+    if (!l) l = (navigator.language || '').toLowerCase().startsWith('ru') ? 'ru' : 'en';
+    document.querySelectorAll('#langSeg button').forEach((b) => b.addEventListener('click', () => U.setLang(b.dataset.l)));
+    U.setLang(l);
+  };
+
   window.U = U;
 })();
