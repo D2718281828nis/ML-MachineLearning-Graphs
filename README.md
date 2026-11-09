@@ -19,6 +19,7 @@ leakage-aware healthcare GNN laboratory. / Коллекция учебных п�
 | [`healthcare-gnn-lab/`](healthcare-gnn-lab/README.md) | Tested healthcare pipeline and task entry points | Тестируемый healthcare pipeline и входные notebooks |
 | [`research-notebooks/`](research-notebooks/) | Preserved exploratory graph-ML work | Сохранённые исследовательские эксперименты |
 | [`utilities/notebooks/`](utilities/notebooks/) | ERD conversion and visualization tools | Утилиты преобразования и визуализации ERD |
+| [**Interactive GNN explainer**](https://d2718281828nis.github.io/ML-MachineLearning-Graphs/) ([`docs/index.html`](docs/index.html)) | Message passing, GCN, GATv2, hyperbolic GCN, GNN vs MLP, edge check Δ_G, "when" vs "where" | Интерактивный сайт: передача сообщений, GCN, GATv2, гиперболическая GCN, GNN против MLP, проверка рёбер Δ_G |
 | [`docs/NOTEBOOK_ANALYSIS.md`](docs/NOTEBOOK_ANALYSIS.md) | What every notebook does and its limitations | Назначение и ограничения каждого notebook |
 | [`theory/hyperbolic-graphs/`](theory/hyperbolic-graphs/README.md) | Bilingual hyperbolic-graph theory | Двуязычная теория гиперболических графов |
 | [`theory/graph-connectivity/`](theory/graph-connectivity/README.md) | Problem statement and formulas: graph connectivity vs. local methods | Постановка задачи и формулы: связность графа против локальных методов |
